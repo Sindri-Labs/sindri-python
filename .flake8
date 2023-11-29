@@ -1,0 +1,58 @@
+[flake8]
+max-line-length = 100
+
+exclude =
+    .mypy_cache/*
+    .pytest_cache/*
+    __pycache__/*
+    .vscode
+
+ignore =
+    # Ignore flake8 errors that conflict with Black
+    # https://github.com/kaste/SublimeLinter-addon-black-for-flake/blob/139744f/plugin.py#L7
+    # We should occasionally check for updates to this file.
+    E111,
+    E117,
+    E121,
+    E122,
+    E123,
+    E124,
+    E125,
+    E126,
+    E128,
+    E129,
+    E201,
+    E202,
+    E203,
+    E221,
+    E222,
+    E225,
+    E226,
+    E227,
+    E231,
+    E241,
+    E251,
+    E261,
+    E262,
+    E265,
+    E271,
+    E272,
+    E302,
+    E303,
+    E306,
+    E502,
+    E701,
+    E702,
+    E703,
+    E704,
+    W291,
+    W292,
+    W293,
+    W391,
+
+    # W503 line break before binary operator
+    W503
+
+select = B,C,E,F,W,T4,B9
+
+per-file-ignores = __init__.py:F401
