@@ -5,4 +5,4 @@ Contains SDK code for Sindri APIs. Please see [Sindri.app](https://sindri.app) f
 
 ## License
 
-sindrilabs is licensed under a [MIT License](LICENSE) and is copyright [Sindri Labs, LLC](https://sindri.app).
+sindri-python is licensed under a [MIT License](LICENSE) and is copyright [Sindri Labs, LLC](https://sindri.app).
