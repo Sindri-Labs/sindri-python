@@ -26,10 +26,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-    python = "^3.10"
-    requests = "^2.13.0"
-]
 description = "Sindri Python SDK"
 homepage = "https://forge.sindri.app"
 license = "MIT"
@@ -41,3 +37,7 @@ urls = [
     "Issues": "https://github.com/Sindri-Labs/sindri-python/issues"
 ]
 version = "0.0.6"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.13.0"
