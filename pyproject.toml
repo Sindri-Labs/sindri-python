@@ -27,7 +27,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "requests",
+    python = "^3.10"
+    requests = "^2.13.0"
 ]
 description = "Sindri Python SDK"
 homepage = "https://forge.sindri.app"
@@ -36,11 +37,7 @@ name = "sindri-labs"
 readme = "README.md"
 repository = "https://github.com/Sindri-Labs/sindri-python"
 requires-python = ">=3.10"
+urls = [
+    "Issues": "https://github.com/Sindri-Labs/sindri-python/issues"
+]
 version = "0.0.6"
-
-[tool.poetry.dependencies]
-python = "^3.10"
-requests = "^2.13.0"
-
-[tool.poetry.urls]
-"Issues" = "https://github.com/Sindri-Labs/sindri-python/issues"
