@@ -48,9 +48,8 @@ jobs:
         run: poetry version $VERSION
 
       - name: Build and Publish
-        run: poetry publish --build
-
-# Authentication at PyPI is handled by "Trusted Publishers" feature,
-# so no need to use the token.
-#        env:
-#          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_API_TOKEN }}
+        env:
+            PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+            poetry config pypi-token.pypi $PYPI_TOKEN
+            poetry publish --build
