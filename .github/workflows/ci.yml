@@ -53,4 +53,4 @@ jobs:
         run: |
             poetry config pypi-token.test-pypi $TEST_PYPI_TOKEN
             poetry config repositories.test-pypi https://test.pypi.org/legacy/
-            poetry publish --build
+            poetry publish --build --repository test-pypi
