@@ -62,7 +62,7 @@ class Sindri:
         self,
         api_key: str,
         api_url: str = DEFAULT_SINDRI_API_URL,
-        verbose_level: int = 2,
+        verbose_level: int = 0,
     ):
         # Do not print anything during initial setup
         self.set_verbose_level(0)
