@@ -26,6 +26,7 @@ jobs:
 
   build_and_publish:
     runs-on: ubuntu-latest
+    # Only run this workflow if the tag starts with "v"
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: [lint]
     steps:
@@ -59,6 +60,7 @@ jobs:
 
   build_and_publish_test:
     runs-on: ubuntu-latest
+    # Only run this workflow if the tag starts with "test-v"
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/test-v')
     needs: [lint]
     steps:
