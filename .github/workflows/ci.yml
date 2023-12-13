@@ -5,25 +5,28 @@ on:
     branches: ["main"]
     tags:
       - "v*"
+      - "test-v*"
   pull_request:
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # - name: Checkout code
+      #   uses: actions/checkout@v4
 
-      - name: Set Up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+      # - name: Set Up Python
+      #   uses: actions/setup-python@v4
+      #   with:
+      #     python-version: '3.10'
 
       - name: Linting
+        # TODO: uncomment above steps for checking out the code and setting up python when Linting is implemented.
         run: echo "black, isort, flake8, mypy still to come..."
 
   build_and_publish:
     runs-on: ubuntu-latest
+    # Only run this workflow if the tag starts with "v"
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: [lint]
     steps:
@@ -53,3 +56,38 @@ jobs:
         run: |
             poetry config pypi-token.pypi $PYPI_TOKEN
             poetry publish --build
+
+
+  build_and_publish_test:
+    runs-on: ubuntu-latest
+    # Only run this workflow if the tag starts with "test-v"
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/test-v')
+    needs: [lint]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Extract Version from Tag
+        run: echo "VERSION=${GITHUB_REF#refs/tags/test-v}" >> $GITHUB_ENV
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - name: Install Dependencies
+        run: poetry install
+
+      - name: Update project.toml Version
+        run: poetry version $VERSION
+
+      - name: Build and Publish
+        env:
+            TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        run: |
+            poetry config pypi-token.test-pypi $TEST_PYPI_TOKEN
+            poetry config repositories.test-pypi https://test.pypi.org/legacy/
+            poetry publish --build --repository test-pypi
