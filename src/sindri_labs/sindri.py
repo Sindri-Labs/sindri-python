@@ -5,6 +5,7 @@ import pathlib
 import tarfile
 import time
 from pprint import pformat
+
 import requests
 
 
@@ -181,6 +182,99 @@ class Sindri:
               """
         )
 
+    def _hit_api_circuit_create(self, circuit_upload_path: str) -> tuple[int, dict | list]:
+        """
+        Submit a circuit to the `/circuit/create` endpoint.
+
+        Do not poll for the circuit detail.
+        Return the `response.status_code` and the JSON decoded `response`.
+        This may raise `Sindri.APIError`.
+        This does not check if the `response.status_code` is the successful response (201).
+
+        `circuit_upload_path` can be a path to a tar.gz circuit file or the circuit directory.
+        If it is a directory, it will automatically be tarred before sending.
+        """
+        if not os.path.exists(circuit_upload_path):
+            raise Sindri.APIError(f"circuit_upload_path does not exist: {circuit_upload_path}")
+
+        if os.path.isfile(circuit_upload_path):
+            # Assume the path is already a tarfile
+            files = {"files": open(circuit_upload_path, "rb")}
+        elif os.path.isdir(circuit_upload_path):
+            # Create a tar archive and upload via byte stream
+            circuit_upload_path = os.path.abspath(circuit_upload_path)
+            file_name = f"{pathlib.Path(circuit_upload_path).stem}.tar.gz"
+            fh = io.BytesIO()
+            with tarfile.open(fileobj=fh, mode="w:gz") as tar:
+                tar.add(circuit_upload_path, arcname=file_name)
+            files = {"files": fh.getvalue()}  # type: ignore
+
+        return self._hit_api(
+            "POST",
+            "circuit/create",
+            files=files,
+        )
+
+    def _hit_api_circuit_prove(self, circuit_id: str, proof_input: str) -> tuple[int, dict | list]:
+        """
+        Submit a circuit to the `/circuit/<circuit_id>/prove` endpoint.
+
+        Do not poll for the proof detail.
+        Return the `response.status_code` and the JSON decoded `response`.
+        This may raise `Sindri.APIError`.
+        This does not check if the `response.status_code` is the successful response (201).
+        """
+        return self._hit_api(
+            "POST",
+            f"circuit/{circuit_id}/prove",
+            data={
+                "proof_input": proof_input,
+                "perform_verify": self.perform_verify,
+            },
+        )
+
+    def _hit_api_circuit_detail(
+        self, circuit_id: str, include_verification_key: bool = False
+    ) -> tuple[int, dict | list]:
+        """
+        Obtain circuit detail by hitting the `/circuit/<circuit_id>/detail` endpoint.
+
+        Return the `response.status_code` and the JSON decoded `response`.
+        This may raise `Sindri.APIError`.
+        This does not check if the `response.status_code` is the successful response (200).
+        """
+        return self._hit_api(
+            "GET",
+            f"circuit/{circuit_id}/detail",
+            data={"include_verification_key": include_verification_key},
+        )
+
+    def _hit_api_proof_detail(
+        self,
+        proof_id: str,
+        include_proof_input: bool = False,
+        include_proof: bool = False,
+        include_public: bool = False,
+        include_verification_key: bool = False,
+    ) -> tuple[int, dict | list]:
+        """
+        Obtain proof detail by hitting the `/proof/<proof_id>/detail` endpoint.
+
+        Return the `response.status_code` and the JSON decoded `response`.
+        This may raise `Sindri.APIError`.
+        This does not check if the `response.status_code` is the successful response (200).
+        """
+        return self._hit_api(
+            "GET",
+            f"proof/{proof_id}/detail",
+            data={
+                "include_proof_input": include_proof_input,
+                "include_public": include_public,
+                "include_verification_key": include_verification_key,
+                "include_proof": include_proof,
+            },
+        )
+
     def create_circuit(
         self,
         circuit_upload_path: str,
@@ -203,31 +297,13 @@ class Sindri:
         # Return value
         circuit_id = ""  # set later
 
-        if not os.path.exists(circuit_upload_path):
-            raise ValueError(f"circuit_upload_path does not exist: {circuit_upload_path}")
-
-        if os.path.isfile(circuit_upload_path):
-            # Assume the path is already a tarfile
-            files = {"files": open(circuit_upload_path, "rb")}
-        elif os.path.isdir(circuit_upload_path):
-            # Create a tar archive and upload via byte stream
-            circuit_upload_path = os.path.abspath(circuit_upload_path)
-            file_name = f"{pathlib.Path(circuit_upload_path).stem}.tar.gz"
-            fh = io.BytesIO()
-            with tarfile.open(fileobj=fh, mode="w:gz") as tar:
-                tar.add(circuit_upload_path, arcname=file_name)
-            files = {"files": fh.getvalue()}  # type: ignore
-
         # 1. Create a circuit, obtain a circuit_id.
         if self.verbose_level > 0:
             print("Circuit: Create")
         if self.verbose_level > 1:
             print(f"    upload_path:   {circuit_upload_path}")
-        response_status_code, response_json = self._hit_api(
-            "POST",
-            "circuit/create",
-            files=files,
-        )
+
+        response_status_code, response_json = self._hit_api_circuit_create(circuit_upload_path)
         if response_status_code != 201:
             raise Sindri.APIError(
                 f"Unable to create a new circuit."
@@ -245,11 +321,7 @@ class Sindri:
         if self.verbose_level > 0:
             print("Circuit: Poll until Ready/Failed")
         for _ in range(self.max_polling_iterations):
-            response_status_code, response_json = self._hit_api(
-                "GET",
-                f"circuit/{circuit_id}/detail",
-                data={"include_verification_key": False},
-            )
+            response_status_code, response_json = self._hit_api_circuit_detail(circuit_id)
             if response_status_code != 200:
                 raise Sindri.APIError(
                     f"Failure to poll circuit detail."
@@ -373,10 +445,8 @@ class Sindri:
         """Get circuit by circuit_id."""
         if self.verbose_level > 0:
             print(f"Circuit: Get circuit detail for circuit_id: {circuit_id}")
-        response_status_code, response_json = self._hit_api(
-            "GET",
-            f"circuit/{circuit_id}/detail",
-            data={"include_verification_key": True},
+        response_status_code, response_json = self._hit_api_circuit_detail(
+            circuit_id, include_verification_key=True
         )
         if response_status_code != 200:
             raise Sindri.APIError(
@@ -398,15 +468,12 @@ class Sindri:
         """Get proof by proof_id."""
         if self.verbose_level > 0:
             print(f"Proof: Get proof detail for proof_id: {proof_id}")
-        response_status_code, response_json = self._hit_api(
-            "GET",
-            f"proof/{proof_id}/detail",
-            data={
-                "include_proof_input": include_proof_input,
-                "include_public": True,
-                "include_verification_key": True,
-                "include_proof": True,
-            },
+        response_status_code, response_json = self._hit_api_proof_detail(
+            proof_id,
+            include_proof_input=include_proof_input,
+            include_proof=True,
+            include_public=True,
+            include_verification_key=True,
         )
         if response_status_code != 200:
             raise Sindri.APIError(
@@ -448,14 +515,7 @@ class Sindri:
         # 1. Submit a proof, obtain a proof_id.
         if self.verbose_level > 0:
             print("Prove circuit")
-        response_status_code, response_json = self._hit_api(
-            "POST",
-            f"circuit/{circuit_id}/prove",
-            data={
-                "proof_input": proof_input,
-                "perform_verify": self.perform_verify,
-            },
-        )
+        response_status_code, response_json = self._hit_api_circuit_prove(circuit_id, proof_input)
         if response_status_code != 201:
             raise Sindri.APIError(
                 f"Unable to prove circuit."
@@ -473,15 +533,12 @@ class Sindri:
         if self.verbose_level > 0:
             print("Proof: Poll until Ready/Failed")
         for _ in range(self.max_polling_iterations):
-            response_status_code, response_json = self._hit_api(
-                "GET",
-                f"proof/{proof_id}/detail",
-                data={
-                    "include_proof_input": False,
-                    "include_proof": False,
-                    "include_public": False,
-                    "include_verification_key": False,
-                },
+            response_status_code, response_json = self._hit_api_proof_detail(
+                proof_id,
+                include_proof_input=False,
+                include_proof=False,
+                include_public=False,
+                include_verification_key=False,
             )
             if response_status_code != 200:
                 raise Sindri.APIError(
@@ -552,11 +609,11 @@ class Sindri:
         - `1`: Print only necesessary information from Circuit/Proof objects
         - `2`: Print everything
 
-        This raises ValueError if `level` is invalid.
+        This raises Sindri.APIError if `level` is invalid.
         """
         error_msg = "Invalid verbose_level. Must be an int in [0,1,2]."
         if not isinstance(level, int):
-            raise ValueError(error_msg)
+            raise Sindri.APIError(error_msg)
         elif level not in [0, 1, 2]:
-            raise ValueError(error_msg)
+            raise Sindri.APIError(error_msg)
         self.verbose_level = level
