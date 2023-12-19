@@ -6,22 +6,62 @@ import tarfile
 import time
 from pprint import pformat
 import requests
+"""
+# Sindri
 
+Utility class for interacting with the Sindri API.
+
+### Dependencies:
+- `requests`: (`pip install requests`)
+
+### Parameters:
+- `api_key: str`: Sindri API Key (required)
+- `api_url: str`: Sindri API Url (default=`"https://forge.sindri.app/api/"`)
+- `verbose_level: int`: Stdout print level (default=`1`, options=`[0,1,2]`)
+
+### Usage
+```python
+circuit_upload_path = "circom/multiplier2"
+proof_input = ""
+proof_input_file_path = "circom/multiplier2/input.json"
+with open(proof_input_file_path, "r") as f:
+    proof_input = f.read()
+
+# Run Sindri API
+API_KEY = <YOUR_API_KEY>
+sindri = Sindri(API_KEY)
+circuit_id = sindri.create_circuit(circuit_upload_path)
+proof_id = sindri.prove_circuit(circuit_id, proof_input)
+```
+
+Methods for interacting with the Sindri API:
+- `create_circuit()` - create a circuit
+- `get_all_circuit_proofs()` - get all proofs for a specific circuit
+- `get_all_circuits()` - get all circuits
+- `get_all_proofs()` - get all proofs
+- `get_circuit()` - get circuit detail
+- `get_proof()` - get proof detail
+- `prove_circuit()` - prove a circuit
+
+Additional methods for configuring the Sindri class instance:
+- `set_api_key()` - Configure Sindri instance with provided API Key
+- `set_api_url()` - Configure Sindri instance with provided API Url
+- `set_verbose_level()` - Configure Sindri instance with stdout verbosity level
+
+"""
 
 class Sindri:
     """
-    # Sindri
-    Utility class for interacting with the Sindri API.
+    # Sindri API SDK
 
-    ### Dependencies:
+    A utility class for interacting with the [Sindri API](https://www.sindri.app).
+
+    ### Dependencies
+
     - `requests`: (`pip install requests`)
 
-    ### Parameters:
-    - `api_key: str`: Sindri API Key (required)
-    - `api_url: str`: Sindri API Url (default=`"https://forge.sindri.app/api/"`)
-    - `verbose_level: int`: Stdout print level (default=`1`, options=`[0,1,2]`)
+    ### Usage Example
 
-    ### Usage
     ```python
     circuit_upload_path = "circom/multiplier2"
     proof_input = ""
@@ -36,19 +76,6 @@ class Sindri:
     proof_id = sindri.prove_circuit(circuit_id, proof_input)
     ```
 
-    Methods for interacting with the Sindri API:
-    - `create_circuit()` - create a circuit
-    - `get_all_circuit_proofs()` - get all proofs for a specific circuit
-    - `get_all_circuits()` - get all circuits
-    - `get_all_proofs()` - get all proofs
-    - `get_circuit()` - get circuit detail
-    - `get_proof()` - get proof detail
-    - `prove_circuit()` - prove a circuit
-
-    Additional methods for configuring the Sindri class instance:
-    - `set_api_key()` - Configure Sindri instance with provided API Key
-    - `set_api_url()` - Configure Sindri instance with provided API Url
-    - `set_verbose_level()` - Configure Sindri instance with stdout verbosity level
     """
 
     class APIError(Exception):
@@ -65,6 +92,14 @@ class Sindri:
         api_url: str = DEFAULT_SINDRI_API_URL,
         verbose_level: int = 0,
     ):
+        """
+        Parameters
+
+        - `api_key: str`: Sindri API Key
+        - `api_url: str`: Sindri API Url
+        - `verbose_level: int`: Stdout print level. Ooptions=`[0,1,2]`
+        """
+
         # Do not print anything during initial setup
         self.set_verbose_level(0)
 
@@ -108,11 +143,12 @@ class Sindri:
         """
         Hit the Sindri API.
 
-        Return
+        Returns
         - int:  response status code
         - dict: response json
 
-        Raises an Exception if:
+        Raises an Exception if
+
         - response is None
         - cannot connect to the API
         - response cannot be JSON decoded
@@ -186,18 +222,24 @@ class Sindri:
         circuit_upload_path: str,
     ) -> str:
         """
-        Create a circuit and poll until the circuit is Ready.
+        Create a circuit and poll the detail endpoint until the circuit
+        has a `status` of `Ready` or `Failed`.
 
-        `circuit_upload_path` can be a path to a tar.gz circuit file or the circuit directory.
-        If it is a directory, it will automatically be tarred before sending.
+        Parameters:
 
-        Return:
-        - str: circuit_id
+        - `circuit_upload_path: str` can be a path to a `.tar.gz` or `.zip` circuit file
+        or the circuit directory. If it is a directory, it will automatically be tarred
+        before sending.
 
-        Raises Exception if
+        Returns:
+
+        - `circuit_id: str`
+
+        Raises `Sindri.APIError` if
+
         - Invalid API Key
         - Unable to connect to the API
-        - Failed circuit compilation
+        - Failed circuit compilation (`status` of `Failed`)
         """
 
         # Return value
@@ -279,7 +321,7 @@ class Sindri:
         return circuit_id
 
     def get_all_circuit_proofs(self, circuit_id: str) -> list[dict]:
-        """Get all proofs for a circuit_id."""
+        """Get all proofs for `circuit_id`."""
         if self.verbose_level > 0:
             print(f"Proof: Get all proofs for circuit_id: {circuit_id}")
         response_status_code, response_json = self._hit_api(
@@ -370,7 +412,7 @@ class Sindri:
         return response_json
 
     def get_circuit(self, circuit_id: str) -> dict:
-        """Get circuit by circuit_id."""
+        """Get circuit for `circuit_id`."""
         if self.verbose_level > 0:
             print(f"Circuit: Get circuit detail for circuit_id: {circuit_id}")
         response_status_code, response_json = self._hit_api(
@@ -395,7 +437,13 @@ class Sindri:
         return response_json
 
     def get_proof(self, proof_id: str, include_proof_input: bool = False) -> dict:
-        """Get proof by proof_id."""
+        """
+        Get proof for `proof_id`.
+
+        Parameters:
+
+        - `include_proof_input: bool` specifies if the proof input should also be returned.
+        """
         if self.verbose_level > 0:
             print(f"Proof: Get proof detail for proof_id: {proof_id}")
         response_status_code, response_json = self._hit_api(
@@ -426,16 +474,17 @@ class Sindri:
 
     def prove_circuit(self, circuit_id: str, proof_input: str) -> str:
         """
-        Prove a circuit given a circuit_id and a proof_input.
+        Prove a circuit given a `circuit_id` and a `proof_input`.
 
         Return
         - str: proof_id
 
-        Raises Exception if
+        Raises `Sindri.APIError` if
+
         - Invalid API Key
         - Unable to connect to the API
         - Circuit does not exist
-        - Circuit is not Ready
+        - Circuit does not have a `status` of `Ready`
         """
 
         # Return values
@@ -531,7 +580,7 @@ class Sindri:
         Set the API Url for the Sindri instance.
 
         NOTE: `v1/` is appended to the Sindri API Url if it is not present.
-        - Example: https://forge.sindri.app/api/ becomes https://forge.sindri.app/api/v1/
+        - Example: `https://forge.sindri.app/api/` becomes `https://forge.sindri.app/api/v1/`
         """
         if not isinstance(api_url, str):
             raise Sindri.APIError("Invalid API Url")
@@ -545,14 +594,21 @@ class Sindri:
 
     def set_verbose_level(self, level: int) -> None:
         """
-        Set verbose_level for stdout printing.
+        Set the verbosity level for stdout printing.
 
-        Verbose level must be an int in `[0,1,2]`:
+        Parameters:
+        
+        - `level: int` must be in `[0,1,2]`
+    
+        Levels:
+
         - `0`: Do not print anything to stdout
         - `1`: Print only necesessary information from Circuit/Proof objects
         - `2`: Print everything
 
-        This raises ValueError if `level` is invalid.
+        Raises `ValueError` if
+        
+        - `level` is invalid.
         """
         error_msg = "Invalid verbose_level. Must be an int in [0,1,2]."
         if not isinstance(level, int):

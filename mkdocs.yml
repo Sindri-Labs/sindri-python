@@ -1,0 +1,16 @@
+site_name: Sindri Labs
+site_url: https://Sindri-Labs.github.io/sindri-python
+site_author: Sindri Labs Inc.
+
+# Repository
+repo_name: sindri-python
+repo_url: https://github.com/Sindri-Labs/sindri-python
+edit_uri: edit/main/docs
+docs_dir: docs/docstrings
+
+plugins:
+    - awesome-pages
+    - search
+
+theme:
+  name: readthedocs
