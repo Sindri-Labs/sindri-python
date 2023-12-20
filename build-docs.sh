@@ -11,7 +11,7 @@ lazydocs \
     --no-watermark \
     src/sindri_labs
 
-mkdocs build
+# mkdocs build
 
-# Transform markdown to jsx syntax so it can be rendered in Docusaurus
-python3 _transform_md_to_jsx.py
+# # Transform markdown to jsx syntax so it can be rendered in Docusaurus
+# python3 _transform_md_to_jsx.py

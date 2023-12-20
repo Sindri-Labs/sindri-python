@@ -7,13 +7,14 @@ jobs:
   build-docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
-          python-version: 3.x
+          python-version: 3.10.6
       - run: |
           pip install lazydocs mkdocs mkdocs-awesome-pages-plugin
-      - run: pwd; ./build-docs.sh
+      - run: ./build-docs.sh
+      - run: python3 _transform_md_to_jsx.py
 
       - name: 'Save Generated Markdown'
         uses: actions/upload-artifact@v3
