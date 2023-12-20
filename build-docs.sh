@@ -8,6 +8,7 @@ lazydocs \
     --output-path="./docs/docstrings" \
     --overview-file="README.md" \
     --src-base-url="https://github.com/Sindri-Labs/sindri-python/blob/main/" \
+    --no-watermark \
     src/sindri_labs
 
 mkdocs build

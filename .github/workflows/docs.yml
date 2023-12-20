@@ -13,11 +13,11 @@ jobs:
           python-version: 3.x
       - run: |
           pip install lazydocs mkdocs mkdocs-awesome-pages-plugin
-      - run: ./build-docs.sh
+      - run: pwd; ./build-docs.sh
 
       - name: 'Save Generated Markdown'
         uses: actions/upload-artifact@v3
         with:
           name: generated_docs
-          path: docs/docstrings/sindri.jsx.md
+          path: ./docs/docstrings/sindri.jsx.md
           retention-days: 90
