@@ -4,7 +4,7 @@ on:
     branches:
       - main
 jobs:
-  deploy:
+  build-docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -12,7 +12,7 @@ jobs:
         with:
           python-version: 3.x
       - run: |
-          pip install lazydocs
+          pip install lazydocs mkdocs mkdocs-awesome-pages-plugin
       - run: ./build-docs.sh
 
       - name: 'Save Generated Markdown'
