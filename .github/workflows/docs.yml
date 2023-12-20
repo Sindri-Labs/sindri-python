@@ -1,0 +1,24 @@
+name: docs
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.10.6
+      - run: |
+          pip install requests>=2.13.0 lazydocs
+      - run: |
+          ./build-docs.sh
+
+      - name: 'Save Generated Markdown'
+        uses: actions/upload-artifact@v3
+        with:
+          name: generated_docs
+          path: ./docs/docstrings/*
+          retention-days: 90
