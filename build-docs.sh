@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 mkdir -p docs/docstrings
 
-set -e
 
 # pip install lazydocs
 lazydocs \
