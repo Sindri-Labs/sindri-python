@@ -6,49 +6,7 @@ import tarfile
 import time
 from pprint import pformat
 import requests
-"""
-# Sindri
 
-Utility class for interacting with the Sindri API.
-
-### Dependencies:
-- `requests`: (`pip install requests`)
-
-### Parameters:
-- `api_key: str`: Sindri API Key (required)
-- `api_url: str`: Sindri API Url (default=`"https://forge.sindri.app/api/"`)
-- `verbose_level: int`: Stdout print level (default=`1`, options=`[0,1,2]`)
-
-### Usage
-```python
-circuit_upload_path = "circom/multiplier2"
-proof_input = ""
-proof_input_file_path = "circom/multiplier2/input.json"
-with open(proof_input_file_path, "r") as f:
-    proof_input = f.read()
-
-# Run Sindri API
-API_KEY = <YOUR_API_KEY>
-sindri = Sindri(API_KEY)
-circuit_id = sindri.create_circuit(circuit_upload_path)
-proof_id = sindri.prove_circuit(circuit_id, proof_input)
-```
-
-Methods for interacting with the Sindri API:
-- `create_circuit()` - create a circuit
-- `get_all_circuit_proofs()` - get all proofs for a specific circuit
-- `get_all_circuits()` - get all circuits
-- `get_all_proofs()` - get all proofs
-- `get_circuit()` - get circuit detail
-- `get_proof()` - get proof detail
-- `prove_circuit()` - prove a circuit
-
-Additional methods for configuring the Sindri class instance:
-- `set_api_key()` - Configure Sindri instance with provided API Key
-- `set_api_url()` - Configure Sindri instance with provided API Url
-- `set_verbose_level()` - Configure Sindri instance with stdout verbosity level
-
-"""
 
 class Sindri:
     """
