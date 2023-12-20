@@ -12,11 +12,9 @@ jobs:
         with:
           python-version: 3.10.6
       - run: |
-          pip install lazydocs mkdocs mkdocs-awesome-pages-plugin
+          pip install requests>=2.13.0 lazydocs mkdocs mkdocs-awesome-pages-plugin
       - run: |
           ./build-docs.sh
-          ls -al docs/docstrings
-          # python3 _transform_md_to_jsx.py
 
       - name: 'Save Generated Markdown'
         uses: actions/upload-artifact@v3
