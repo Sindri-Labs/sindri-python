@@ -42,7 +42,7 @@ class Sindri:
 
         pass
 
-    DEFAULT_SINDRI_API_URL = "https://forge.sindri.app/api/"
+    DEFAULT_SINDRI_API_URL = "https://sindri.app/api/"
     API_VERSION = "v1"
 
     def __init__(
@@ -595,7 +595,7 @@ class Sindri:
         Set the API Url for the Sindri instance.
 
         NOTE: `v1/` is appended to the Sindri API Url if it is not present.
-        - Example: `https://forge.sindri.app/api/` becomes `https://forge.sindri.app/api/v1/`
+        - Example: `https://sindri.app/api/` becomes `https://sindri.app/api/v1/`
         """
         if not isinstance(api_url, str):
             raise Sindri.APIError("Invalid API Url")
