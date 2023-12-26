@@ -56,7 +56,7 @@ class Sindri:
 
         - `api_key: str`: Sindri API Key
         - `api_url: str`: Sindri API Url
-        - `verbose_level: int`: Stdout print level. Ooptions=`[0,1,2]`
+        - `verbose_level: int`: Stdout print level. Options=`[0,1,2]`
         """
 
         # Do not print anything during initial setup
@@ -209,7 +209,9 @@ class Sindri:
             files=files,
         )
 
-    def _hit_api_circuit_prove(self, circuit_id: str, proof_input: str) -> tuple[int, dict | list]:
+    def _hit_api_circuit_prove(
+        self, circuit_id: str, proof_input: str, prover_implementation: str | None = None
+    ) -> tuple[int, dict | list]:
         """
         Submit a circuit to the `/circuit/<circuit_id>/prove` endpoint.
 
@@ -224,6 +226,7 @@ class Sindri:
             data={
                 "proof_input": proof_input,
                 "perform_verify": self.perform_verify,
+                "prover_implementation": prover_implementation,
             },
         )
 
@@ -497,7 +500,9 @@ class Sindri:
 
         return response_json
 
-    def prove_circuit(self, circuit_id: str, proof_input: str) -> str:
+    def prove_circuit(
+        self, circuit_id: str, proof_input: str, prover_implementation: str | None = None
+    ) -> str:
         """
         Prove a circuit given a `circuit_id` and a `proof_input`.
 
@@ -510,6 +515,11 @@ class Sindri:
         - Unable to connect to the API
         - Circuit does not exist
         - Circuit does not have a `status` of `Ready`
+
+        NOTE: `prover_implementation` is currently only supported for Sindri internal usage.
+        The default value, `None`, chooses the best supported prover implementation based on a
+        variety of factors including the available hardware, proving scheme, circuit size, and
+        framework.
         """
 
         # Return values
@@ -522,7 +532,9 @@ class Sindri:
         # 1. Submit a proof, obtain a proof_id.
         if self.verbose_level > 0:
             print("Prove circuit")
-        response_status_code, response_json = self._hit_api_circuit_prove(circuit_id, proof_input)
+        response_status_code, response_json = self._hit_api_circuit_prove(
+            circuit_id, proof_input, prover_implementation=prover_implementation
+        )
         if response_status_code != 201:
             raise Sindri.APIError(
                 f"Unable to prove circuit."
@@ -612,9 +624,9 @@ class Sindri:
         Set the verbosity level for stdout printing.
 
         Parameters:
-        
+
         - `level: int` must be in `[0,1,2]`
-    
+
         Levels:
 
         - `0`: Do not print anything to stdout
@@ -622,7 +634,7 @@ class Sindri:
         - `2`: Print everything
 
         Raises `Sindri.APIError` if
-        
+
         - `level` is invalid.
         """
         error_msg = "Invalid verbose_level. Must be an int in [0,1,2]."
