@@ -64,7 +64,7 @@ class Sindri:
 
         self.polling_interval_sec: int = 1  # polling interval for circuit compilation & proving
         self.max_polling_iterations: int = 172800  # 2 days with polling interval 1 second
-        self.perform_verify: bool = True
+        self.perform_verify: bool = False
         self.set_api_url(api_url)
         self.set_api_key(api_key)
 
