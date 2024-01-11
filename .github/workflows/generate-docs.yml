@@ -1,11 +1,16 @@
-name: docs
+name: Generate Docs
+
+# Generate Docs and save as an artifact file
+# - only on tags that start with `v`
+
 on:
-  push:
-    tags:
-      - "v*"
+  release:
+    types: [published]
+
 jobs:
-  build-docs:
+  generate-docs:
     runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4

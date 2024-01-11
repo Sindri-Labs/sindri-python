@@ -1,33 +1,21 @@
-name: CI Workflows
+name: Build & Publish PyPI
+
+
+# Build and publish to PyPI
+# - official PyPI only on tags that start with `v`
+# - test PyPI only on tags that start with `test-v`
+
 
 on:
-  push:
-    branches: ["main"]
-    tags:
-      - "v*"
-      - "test-v*"
-  pull_request:
+  release:
+    types: [published]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      # - name: Checkout code
-      #   uses: actions/checkout@v4
 
-      # - name: Set Up Python
-      #   uses: actions/setup-python@v4
-      #   with:
-      #     python-version: '3.10'
-
-      - name: Linting
-        # TODO: uncomment above steps for checking out the code and setting up python when Linting is implemented.
-        run: echo "black, isort, flake8, mypy still to come..."
-
-  build_and_publish:
+  build_and_publish_pypi:
     runs-on: ubuntu-latest
     # Only run this workflow if the tag starts with "v"
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: [lint]
     steps:
       - name: Checkout code
@@ -58,10 +46,10 @@ jobs:
             poetry publish --build
 
 
-  build_and_publish_test:
+  build_and_publish_test_pypi:
     runs-on: ubuntu-latest
     # Only run this workflow if the tag starts with "test-v"
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/test-v')
+    if: startsWith(github.ref, 'refs/tags/test-v')
     needs: [lint]
     steps:
       - name: Checkout code
