@@ -1,0 +1,22 @@
+# name: Lint Check
+
+# on:
+#   push:
+#     branches: ["main"]
+#   pull_request:
+
+# jobs:
+#   lint:
+#     runs-on: ubuntu-latest
+#     steps:
+#       # - name: Checkout code
+#       #   uses: actions/checkout@v4
+
+#       # - name: Set Up Python
+#       #   uses: actions/setup-python@v4
+#       #   with:
+#       #     python-version: '3.10'
+
+#       - name: Linting
+#         # TODO: uncomment above steps for checking out the code and setting up python when Linting is implemented.
+#         run: echo "black, isort, flake8, mypy still to come..."
