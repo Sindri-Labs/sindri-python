@@ -9,4 +9,4 @@ lazydocs \
     --overview-file="README.md" \
     --src-base-url="https://github.com/Sindri-Labs/sindri-python/blob/$TAG/" \
     --no-watermark \
-    src/sindri_labs
+    src/sindri

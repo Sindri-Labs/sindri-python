@@ -10,7 +10,7 @@ lazydocs \
     --overview-file="README.md" \
     --src-base-url="https://github.com/Sindri-Labs/sindri-python/blob/$TAG/" \
     --no-watermark \
-    src/sindri_labs
+    src/sindri
 
 # pip install mkdocs mkdocs-awesome-pages-plugin
 echo "Hosting docs on http://localhost:1111"
