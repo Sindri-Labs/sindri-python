@@ -504,7 +504,8 @@ class Sindri:
         self, circuit_id: str, proof_input: str, prover_implementation: str | None = None
     ) -> str:
         """
-        Prove a circuit given a `circuit_id` and a `proof_input`.
+        Prove a circuit given a `circuit_id` and a `proof_input` and poll the detail endpoint
+        until the proof has a `status` of `Ready` or `Failed`.
 
         Return
         - str: proof_id
@@ -643,3 +644,110 @@ class Sindri:
         elif level not in [0, 1, 2]:
             raise Sindri.APIError(error_msg)
         self.verbose_level = level
+
+    def submit_circuit(
+        self,
+        circuit_upload_path: str,
+    ) -> str:
+        """
+        Create a circuit. Unlike the `create_circuit()` method, do not and poll the detail
+        endpoint until the circuit has a `status` of `Ready` or `Failed`.
+
+        Parameters:
+
+        - `circuit_upload_path: str` can be a path to a `.tar.gz` or `.zip` circuit file
+        or the circuit directory. If it is a directory, it will automatically be tarred
+        before sending.
+
+        Returns:
+
+        - `circuit_id: str`
+
+        Raises `Sindri.APIError` if
+
+        - Invalid API Key
+        - Unable to connect to the API
+        """
+
+        # Return value
+        circuit_id = ""  # set later
+
+        # 1. Create a circuit, obtain a circuit_id.
+        if self.verbose_level > 0:
+            print("Circuit: Create")
+        if self.verbose_level > 1:
+            print(f"    upload_path:   {circuit_upload_path}")
+
+        response_status_code, response_json = self._hit_api_circuit_create(circuit_upload_path)
+        if response_status_code != 201:
+            raise Sindri.APIError(
+                f"Unable to create a new circuit."
+                f" status={response_status_code} response={response_json}"
+            )
+        if not isinstance(response_json, dict):
+            raise Sindri.APIError("Received unexpected type for circuit detail response.")
+
+        # Obtain circuit_id
+        circuit_id = response_json.get("circuit_id", "")
+        if self.verbose_level > 0:
+            print(f"    circuit_id:   {circuit_id}")
+
+        if self.verbose_level > 0:
+            self.get_circuit(circuit_id)
+
+        return circuit_id
+
+    def submit_proof(
+        self, circuit_id: str, proof_input: str, prover_implementation: str | None = None
+    ) -> str:
+        """
+        Prove a circuit given a `circuit_id` and a `proof_input`. Unlike the `prove_circuit()`
+        method, do not and poll the detail endpoint until the proof has a `status` of `Ready`
+        or `Failed`.
+
+        Return
+        - str: proof_id
+
+        Raises `Sindri.APIError` if
+
+        - Invalid API Key
+        - Unable to connect to the API
+        - Circuit does not exist
+        - Circuit does not have a `status` of `Ready`
+
+        NOTE: `prover_implementation` is currently only supported for Sindri internal usage.
+        The default value, `None`, chooses the best supported prover implementation based on a
+        variety of factors including the available hardware, proving scheme, circuit size, and
+        framework.
+        """
+
+        # Return values
+        proof_id = ""
+
+        # TODO: HANDLE the JSON/non-JSON
+        # Convert the proof_input into a json string
+        # proof_input_json_str = json.dumps(proof_input)
+
+        # 1. Submit a proof, obtain a proof_id.
+        if self.verbose_level > 0:
+            print("Prove circuit")
+        response_status_code, response_json = self._hit_api_circuit_prove(
+            circuit_id, proof_input, prover_implementation=prover_implementation
+        )
+        if response_status_code != 201:
+            raise Sindri.APIError(
+                f"Unable to prove circuit."
+                f" status={response_status_code} response={response_json}"
+            )
+        if not isinstance(response_json, dict):
+            raise Sindri.APIError("Received unexpected type for proof detail response.")
+
+        # Obtain proof_id
+        proof_id = response_json.get("proof_id", "")
+        if self.verbose_level > 0:
+            print(f"    proof_id:     {proof_id}")
+
+        if self.verbose_level > 0:
+            self.get_proof(proof_id)
+
+        return proof_id
