@@ -272,12 +272,9 @@ class Sindri:
             },
         )
 
-    def create_circuit(
-        self,
-        circuit_upload_path: str,
-    ) -> str:
+    def create_circuit(self, circuit_upload_path: str, wait: bool = True) -> str:
         """
-        Create a circuit and poll the detail endpoint until the circuit
+        Create a circuit and, if `wait=True`, poll the detail endpoint until the circuit
         has a `status` of `Ready` or `Failed`.
 
         Parameters:
@@ -285,6 +282,8 @@ class Sindri:
         - `circuit_upload_path: str` can be a path to a `.tar.gz` or `.zip` circuit file
         or the circuit directory. If it is a directory, it will automatically be tarred
         before sending.
+        - `wait: bool=True`. If `True`, poll the circuit detail until the circuit has a status
+        of `Ready` or `Failed`. If `False`, submit the circuit and return immediately.
 
         Returns:
 
@@ -294,7 +293,7 @@ class Sindri:
 
         - Invalid API Key
         - Unable to connect to the API
-        - Failed circuit compilation (`status` of `Failed`)
+        - If `wait=True`, failed circuit compilation (`status` of `Failed`)
         """
 
         # Return value
@@ -320,32 +319,33 @@ class Sindri:
         if self.verbose_level > 0:
             print(f"    circuit_id:   {circuit_id}")
 
-        # 2. Poll circuit detail until it has a status of Ready/Failed
-        if self.verbose_level > 0:
-            print("Circuit: Poll until Ready/Failed")
-        for _ in range(self.max_polling_iterations):
-            response_status_code, response_json = self._hit_api_circuit_detail(circuit_id)
-            if response_status_code != 200:
+        if wait:
+            # 2. Poll circuit detail until it has a status of Ready/Failed
+            if self.verbose_level > 0:
+                print("Circuit: Poll until Ready/Failed")
+            for _ in range(self.max_polling_iterations):
+                response_status_code, response_json = self._hit_api_circuit_detail(circuit_id)
+                if response_status_code != 200:
+                    raise Sindri.APIError(
+                        f"Failure to poll circuit detail."
+                        f" status={response_status_code} response={response_json}"
+                    )
+                if not isinstance(response_json, dict):
+                    raise Sindri.APIError("Received unexpected type for circuit detail response.")
+                circuit_status = response_json.get("status", "")
+                if circuit_status == "Failed":
+                    raise Sindri.APIError(
+                        f"Circuit compilation failed."
+                        f" status={response_status_code} response={response_json}"
+                    )
+                if circuit_status == "Ready":
+                    break
+                time.sleep(self.polling_interval_sec)
+            else:
                 raise Sindri.APIError(
-                    f"Failure to poll circuit detail."
+                    f"Circuit compile polling timed out."
                     f" status={response_status_code} response={response_json}"
                 )
-            if not isinstance(response_json, dict):
-                raise Sindri.APIError("Received unexpected type for circuit detail response.")
-            circuit_status = response_json.get("status", "")
-            if circuit_status == "Failed":
-                raise Sindri.APIError(
-                    f"Circuit compilation failed."
-                    f" status={response_status_code} response={response_json}"
-                )
-            if circuit_status == "Ready":
-                break
-            time.sleep(self.polling_interval_sec)
-        else:
-            raise Sindri.APIError(
-                f"Circuit compile polling timed out."
-                f" status={response_status_code} response={response_json}"
-            )
 
         if self.verbose_level > 0:
             self.get_circuit(circuit_id)
@@ -501,11 +501,15 @@ class Sindri:
         return response_json
 
     def prove_circuit(
-        self, circuit_id: str, proof_input: str, prover_implementation: str | None = None
+        self,
+        circuit_id: str,
+        proof_input: str,
+        prover_implementation: str | None = None,
+        wait: bool = True,
     ) -> str:
         """
-        Prove a circuit given a `circuit_id` and a `proof_input` and poll the detail endpoint
-        until the proof has a `status` of `Ready` or `Failed`.
+        Prove a circuit given a `circuit_id` and a `proof_input` and, if `wait=True`, poll the
+        detail endpoint until the proof has a `status` of `Ready` or `Failed`.
 
         Return
         - str: proof_id
@@ -515,7 +519,7 @@ class Sindri:
         - Invalid API Key
         - Unable to connect to the API
         - Circuit does not exist
-        - Circuit does not have a `status` of `Ready`
+        - If `wait=True`, circuit does not have a `status` of `Ready`
 
         NOTE: `prover_implementation` is currently only supported for Sindri internal usage.
         The default value, `None`, chooses the best supported prover implementation based on a
@@ -549,39 +553,40 @@ class Sindri:
         if self.verbose_level > 0:
             print(f"    proof_id:     {proof_id}")
 
-        # 2. Poll proof detail until it has a status of Ready/Failed
-        if self.verbose_level > 0:
-            print("Proof: Poll until Ready/Failed")
-        for _ in range(self.max_polling_iterations):
-            response_status_code, response_json = self._hit_api_proof_detail(
-                proof_id,
-                include_proof_input=False,
-                include_proof=False,
-                include_public=False,
-                include_verification_key=False,
-            )
-            if response_status_code != 200:
-                raise Sindri.APIError(
-                    f"Failure to poll proof detail."
-                    f" status={response_status_code} response={response_json}"
+        if wait:
+            # 2. Poll proof detail until it has a status of Ready/Failed
+            if self.verbose_level > 0:
+                print("Proof: Poll until Ready/Failed")
+            for _ in range(self.max_polling_iterations):
+                response_status_code, response_json = self._hit_api_proof_detail(
+                    proof_id,
+                    include_proof_input=False,
+                    include_proof=False,
+                    include_public=False,
+                    include_verification_key=False,
                 )
-            if not isinstance(response_json, dict):
-                raise Sindri.APIError("Received unexpected type for proof detail response.")
+                if response_status_code != 200:
+                    raise Sindri.APIError(
+                        f"Failure to poll proof detail."
+                        f" status={response_status_code} response={response_json}"
+                    )
+                if not isinstance(response_json, dict):
+                    raise Sindri.APIError("Received unexpected type for proof detail response.")
 
-            proof_status = response_json.get("status", "")
-            if proof_status == "Failed":
+                proof_status = response_json.get("status", "")
+                if proof_status == "Failed":
+                    raise Sindri.APIError(
+                        f"Prove circuit failed."
+                        f" status={response_status_code} response={response_json}"
+                    )
+                if proof_status == "Ready":
+                    break
+                time.sleep(self.polling_interval_sec)
+            else:
                 raise Sindri.APIError(
-                    f"Prove circuit failed."
+                    f"Prove circuit polling timed out."
                     f" status={response_status_code} response={response_json}"
                 )
-            if proof_status == "Ready":
-                break
-            time.sleep(self.polling_interval_sec)
-        else:
-            raise Sindri.APIError(
-                f"Prove circuit polling timed out."
-                f" status={response_status_code} response={response_json}"
-            )
 
         if self.verbose_level > 0:
             self.get_proof(proof_id)
@@ -650,6 +655,8 @@ class Sindri:
         circuit_upload_path: str,
     ) -> str:
         """
+        Alias for `create_circuit()` with `wait=False`.
+
         Create a circuit. Unlike the `create_circuit()` method, do not and poll the detail
         endpoint until the circuit has a `status` of `Ready` or `Failed`.
 
@@ -668,39 +675,14 @@ class Sindri:
         - Invalid API Key
         - Unable to connect to the API
         """
-
-        # Return value
-        circuit_id = ""  # set later
-
-        # 1. Create a circuit, obtain a circuit_id.
-        if self.verbose_level > 0:
-            print("Circuit: Create")
-        if self.verbose_level > 1:
-            print(f"    upload_path:   {circuit_upload_path}")
-
-        response_status_code, response_json = self._hit_api_circuit_create(circuit_upload_path)
-        if response_status_code != 201:
-            raise Sindri.APIError(
-                f"Unable to create a new circuit."
-                f" status={response_status_code} response={response_json}"
-            )
-        if not isinstance(response_json, dict):
-            raise Sindri.APIError("Received unexpected type for circuit detail response.")
-
-        # Obtain circuit_id
-        circuit_id = response_json.get("circuit_id", "")
-        if self.verbose_level > 0:
-            print(f"    circuit_id:   {circuit_id}")
-
-        if self.verbose_level > 0:
-            self.get_circuit(circuit_id)
-
-        return circuit_id
+        return self.create_circuit(circuit_upload_path, wait=False)
 
     def submit_proof(
         self, circuit_id: str, proof_input: str, prover_implementation: str | None = None
     ) -> str:
         """
+        Alias for `prove_circuit()` with `wait=False`.
+
         Prove a circuit given a `circuit_id` and a `proof_input`. Unlike the `prove_circuit()`
         method, do not and poll the detail endpoint until the proof has a `status` of `Ready`
         or `Failed`.
@@ -713,41 +695,12 @@ class Sindri:
         - Invalid API Key
         - Unable to connect to the API
         - Circuit does not exist
-        - Circuit does not have a `status` of `Ready`
 
         NOTE: `prover_implementation` is currently only supported for Sindri internal usage.
         The default value, `None`, chooses the best supported prover implementation based on a
         variety of factors including the available hardware, proving scheme, circuit size, and
         framework.
         """
-
-        # Return values
-        proof_id = ""
-
-        # TODO: HANDLE the JSON/non-JSON
-        # Convert the proof_input into a json string
-        # proof_input_json_str = json.dumps(proof_input)
-
-        # 1. Submit a proof, obtain a proof_id.
-        if self.verbose_level > 0:
-            print("Prove circuit")
-        response_status_code, response_json = self._hit_api_circuit_prove(
-            circuit_id, proof_input, prover_implementation=prover_implementation
+        return self.prove_circuit(
+            circuit_id, proof_input, prover_implementation=prover_implementation, wait=False
         )
-        if response_status_code != 201:
-            raise Sindri.APIError(
-                f"Unable to prove circuit."
-                f" status={response_status_code} response={response_json}"
-            )
-        if not isinstance(response_json, dict):
-            raise Sindri.APIError("Received unexpected type for proof detail response.")
-
-        # Obtain proof_id
-        proof_id = response_json.get("proof_id", "")
-        if self.verbose_level > 0:
-            print(f"    proof_id:     {proof_id}")
-
-        if self.verbose_level > 0:
-            self.get_proof(proof_id)
-
-        return proof_id
