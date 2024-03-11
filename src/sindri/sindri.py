@@ -353,6 +353,35 @@ class Sindri:
         # Circuit compilation success!
         return circuit_id
 
+    def delete_circuit(self, circuit_id: str) -> None:
+        """
+        Delete a circuit by hitting the `/circuit/<circuit_id>/delete` endpoint.
+        This also deletes all of the circuit's proofs.
+
+        Returns `None` if the deletion was successful. Else, raise `Sindri.APIError`.
+        """
+        response_status_code, response_json = self._hit_api(
+            "DELETE", f"circuit/{circuit_id}/delete"
+        )
+        if response_status_code != 200:
+            raise Sindri.APIError(
+                f"Unable to delete circuit_id={circuit_id}."
+                f" status={response_status_code} response={response_json}"
+            )
+
+    def delete_proof(self, proof_id: str) -> None:
+        """
+        Delete a proof by hitting the `/proof/<proof_id>/delete` endpoint.
+
+        Returns `None` if the deletion was successful. Else, raise `Sindri.APIError`.
+        """
+        response_status_code, response_json = self._hit_api("DELETE", f"proof/{proof_id}/delete")
+        if response_status_code != 200:
+            raise Sindri.APIError(
+                f"Unable to delete proof_id={proof_id}."
+                f" status={response_status_code} response={response_json}"
+            )
+
     def get_all_circuit_proofs(self, circuit_id: str) -> list[dict]:
         """Get all proofs for `circuit_id`."""
         if self.verbose_level > 0:
@@ -497,6 +526,24 @@ class Sindri:
             if self.verbose_level == 1:
                 proof_detail = self._get_verbose_1_proof_detail(proof_detail)
             print(f"{pformat(proof_detail, indent=4)}\n")
+
+        return response_json
+
+    def get_user_team_details(self) -> dict:
+        """Get details about the user or team associated with the provided API Key."""
+        if self.verbose_level > 0:
+            print("User/Team: Get user/team details for the provided API Key.")
+        response_status_code, response_json = self._hit_api("GET", "team/me")
+        if response_status_code != 200:
+            raise Sindri.APIError(
+                f"Unable to fetch team details."
+                f" status={response_status_code} response={response_json}"
+            )
+        if not isinstance(response_json, dict):
+            raise Sindri.APIError("Received unexpected type for team detail response.")
+
+        if self.verbose_level > 0:
+            print(f"{pformat(response_json, indent=4)}\n")
 
         return response_json
 

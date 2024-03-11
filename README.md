@@ -17,3 +17,6 @@ Documentation for this repo is automatically generated from the Python docstring
 [![](https://img.shields.io/github/license/sindri-labs/sindri-python?style=for-the-badge)](https://img.shields.io/github/license/sindri-labs/sindri-python?style=for-the-badge)
 
 `sindri-python` is licensed under a [MIT License](LICENSE) and is copyright [Sindri Labs, Inc.](https://sindri.app).
+
+## Unit Tests
+See [`tests/README.md`](tests/README.md) for more information.
