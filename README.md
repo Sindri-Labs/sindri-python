@@ -19,4 +19,4 @@ Documentation for this repo is automatically generated from the Python docstring
 `sindri-python` is licensed under a [MIT License](LICENSE) and is copyright [Sindri Labs, Inc.](https://sindri.app).
 
 ## Unit Tests
-See `tests/README.md` for more information.
+See [`tests/README.md`](tests/README.md) for more information.
