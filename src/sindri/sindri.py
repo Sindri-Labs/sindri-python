@@ -123,12 +123,12 @@ class Sindri:
         try:
             if method == "POST":
                 response = requests.post(
-                    full_path, headers=self.headers_json, data=data, files=files, verify=False
+                    full_path, headers=self.headers_json, data=data, files=files
                 )
             elif method == "GET":
-                response = requests.get(full_path, headers=self.headers_json, params=data, verify=False)
+                response = requests.get(full_path, headers=self.headers_json, params=data)
             elif method == "DELETE":
-                response = requests.delete(full_path, headers=self.headers_json, data=data, verify=False)
+                response = requests.delete(full_path, headers=self.headers_json, data=data)
             else:
                 raise Sindri.APIError("Invalid request method")
         except requests.exceptions.ConnectionError:
@@ -353,35 +353,29 @@ class Sindri:
         # Circuit compilation success!
         return circuit_id
 
-    def delete_circuit(
-        self, circuit_id: str
-    ) -> tuple[int, dict | list]:
+    def delete_circuit(self, circuit_id: str) -> None:
         """
         Delete a circuit by hitting the `/circuit/<circuit_id>/delete` endpoint.
         This also deletes all of the circuit's proofs.
 
-        Return the `response.status_code` and the JSON decoded `response`.
-        This may raise `Sindri.APIError`.
-        This does not check if the `response.status_code` is the successful response (200).
+        Returns `None` if the deletion was successful. Else, raise `Sindri.APIError`.
         """
-        response_status_code, response_json =  self._hit_api("DELETE", f"circuit/{circuit_id}/delete")
+        response_status_code, response_json = self._hit_api(
+            "DELETE", f"circuit/{circuit_id}/delete"
+        )
         if response_status_code != 200:
             raise Sindri.APIError(
                 f"Unable to delete circuit_id={circuit_id}."
                 f" status={response_status_code} response={response_json}"
             )
 
-    def delete_proof(
-        self, proof_id: str
-    ) -> tuple[int, dict | list]:
+    def delete_proof(self, proof_id: str) -> None:
         """
         Delete a proof by hitting the `/proof/<proof_id>/delete` endpoint.
 
-        Return the `response.status_code` and the JSON decoded `response`.
-        This may raise `Sindri.APIError`.
-        This does not check if the `response.status_code` is the successful response (200).
+        Returns `None` if the deletion was successful. Else, raise `Sindri.APIError`.
         """
-        response_status_code, response_json =  self._hit_api("DELETE", f"proof/{proof_id}/delete")
+        response_status_code, response_json = self._hit_api("DELETE", f"proof/{proof_id}/delete")
         if response_status_code != 200:
             raise Sindri.APIError(
                 f"Unable to delete proof_id={proof_id}."
@@ -538,7 +532,7 @@ class Sindri:
     def get_user_team_details(self) -> dict:
         """Get details about the user or team associated with the provided API Key."""
         if self.verbose_level > 0:
-            print(f"User/Team: Get user/team details for the provided API Key.")
+            print("User/Team: Get user/team details for the provided API Key.")
         response_status_code, response_json = self._hit_api("GET", "team/me")
         if response_status_code != 200:
             raise Sindri.APIError(
