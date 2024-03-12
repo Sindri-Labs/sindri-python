@@ -63,7 +63,6 @@ class Sindri:
         """
         # Obtain version from module
         self.version = __version__
-        self.sindri_header_key = ""
 
         # Do not print anything during initial setup
         self.set_verbose_level(0)
