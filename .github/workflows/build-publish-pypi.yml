@@ -48,42 +48,47 @@ jobs:
             poetry publish --build
 
 
-  build_and_publish_test_pypi:
-    runs-on: ubuntu-latest
-    # Only run this workflow if the tag starts with "test-v"
-    if: startsWith(github.ref, 'refs/tags/test-v')
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+# NOTE: The below section is commented out because we currently cannot publish to test.pypi.org.
+# This repo is configured to publish to the `sindri` PyPI package and we do not own it on test.pypi.org.
+#
+# We switched from `sindri-labs` to `sindri` PyPI package names.
+# This required changing the `name` value in `pyproject.toml` as well as the outer directory name from `sindri-labs` to `sindri`.
+# We previously owned the `sindri-labs` package on both pypi.org and test.pypi.org.
+# However, when we obtained the `sindri` pypi.org package and switch this code repo to use `sindri` instead of `sindri-labs`, 
+# we did not also obtain the `sindri` test.pypi.org package.
 
-      - name: Set Up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+  # build_and_publish_test_pypi:
+  #   runs-on: ubuntu-latest
+  #   # Only run this workflow if the tag starts with "test-v"
+  #   if: startsWith(github.ref, 'refs/tags/test-v')
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Extract Version from Tag
-        run: echo "VERSION=${GITHUB_REF#refs/tags/test-v}" >> $GITHUB_ENV
+  #     - name: Set Up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.10'
 
-      - name: Set version variable in module file
-        run: echo "VERSION=${{ env.VERSION }}" > src/sindri/__init__.py
+  #     - name: Extract Version from Tag
+  #       run: echo "VERSION=${GITHUB_REF#refs/tags/test-v}" >> $GITHUB_ENV
 
-      - name: Change from sindri to sindri-labs pypi name
-        # We own the sindri PyPI package but the sindri-labs test.pypi.org package
-        run: sed -i -e 's/name = "sindri"/name = "sindri-labs"/g' pyproject.toml
+  #     - name: Set version variable in module file
+  #       run: echo "VERSION=${{ env.VERSION }}" > src/sindri/__init__.py
 
-      - name: Install poetry
-        run: pip install poetry
+  #     - name: Install poetry
+  #       run: pip install poetry
 
-      - name: Install Dependencies
-        run: poetry install
+  #     - name: Install Dependencies
+  #       run: poetry install
 
-      - name: Update project.toml Version
-        run: poetry version $VERSION
+  #     - name: Update project.toml Version
+  #       run: poetry version $VERSION
 
-      - name: Build and Publish
-        env:
-            TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        run: |
-            poetry config pypi-token.test-pypi $TEST_PYPI_TOKEN
-            poetry config repositories.test-pypi https://test.pypi.org/legacy/
-            poetry publish --build --repository test-pypi
+  #     - name: Build and Publish
+  #       env:
+  #           TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
+  #       run: |
+  #           poetry config pypi-token.test-pypi $TEST_PYPI_TOKEN
+  #           poetry config repositories.test-pypi https://test.pypi.org/legacy/
+  #           poetry publish --build --repository test-pypi
