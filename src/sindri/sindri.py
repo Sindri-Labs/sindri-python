@@ -658,8 +658,7 @@ class Sindri:
         return proof_id
 
     def set_api_key(self, api_key: str) -> None:
-        """Set the API Key and headers for the Sindri instance.
-        Also set the"""
+        """Set the API Key and headers for the Sindri instance."""
         if not isinstance(api_key, str):
             raise Sindri.APIError("Invalid API Key")
         if api_key == "":
