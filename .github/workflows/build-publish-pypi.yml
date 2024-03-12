@@ -67,6 +67,10 @@ jobs:
       - name: Set version variable in module file
         run: echo "VERSION=${{ env.VERSION }}" > src/sindri/__init__.py
 
+      - name: Change from sindri to sindri-labs pypi name
+        # We own the sindri PyPI package but the sindri-labs test.pypi.org package
+        run: sed -i -e 's/name = "sindri"/name = "sindri-labs"/g' pyproject.toml
+
       - name: Install poetry
         run: pip install poetry
 
