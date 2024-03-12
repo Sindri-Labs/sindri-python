@@ -2,6 +2,7 @@ import io
 import json
 import os
 import pathlib
+import platform
 import tarfile
 import time
 from pprint import pformat
@@ -9,6 +10,7 @@ from pprint import pformat
 import requests
 
 from . import __version__
+
 
 class Sindri:
     """
@@ -61,6 +63,7 @@ class Sindri:
         """
         # Obtain version from module
         self.version = __version__
+        self.sindri_header_key = ""
 
         # Do not print anything during initial setup
         self.set_verbose_level(0)
@@ -274,6 +277,16 @@ class Sindri:
                 "include_proof": include_proof,
             },
         )
+
+    def _set_json_request_headers(self) -> None:
+        """Set JSON request headers (set `self.headers_json`). Use `self.api_key` for `Bearer`.
+        Additionally set the `Sindri-Client` header.
+        """
+        self.headers_json = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+            "Sindri-Client": f"sindri-py-sdk/{self.version} ({platform.platform()}) python_version:{platform.python_version()}",  # noqa: E501
+        }
 
     def create_circuit(self, circuit_upload_path: str, wait: bool = True) -> str:
         """
@@ -645,16 +658,14 @@ class Sindri:
         return proof_id
 
     def set_api_key(self, api_key: str) -> None:
-        """Set the API Key and headers for the Sindri instance."""
+        """Set the API Key and headers for the Sindri instance.
+        Also set the"""
         if not isinstance(api_key, str):
             raise Sindri.APIError("Invalid API Key")
         if api_key == "":
             raise Sindri.APIError("Invalid API Key")
         self.api_key = api_key
-        self.headers_json = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
-        }
+        self._set_json_request_headers()
         if self.verbose_level > 0:
             print(f"Sindri API Key: {self.api_key}")
 
