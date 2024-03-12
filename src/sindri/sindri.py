@@ -8,6 +8,7 @@ from pprint import pformat
 
 import requests
 
+from . import VERSION
 
 class Sindri:
     """
@@ -58,6 +59,8 @@ class Sindri:
         - `api_url: str`: Sindri API Url
         - `verbose_level: int`: Stdout print level. Options=`[0,1,2]`
         """
+        # Obtain version from module
+        self.version = VERSION
 
         # Do not print anything during initial setup
         self.set_verbose_level(0)

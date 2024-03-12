@@ -28,6 +28,9 @@ jobs:
       - name: Extract Version from Tag
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
+      - name: Set version variable in module file
+        run: echo "VERSION=${{ env.VERSION }}" > src/sindri/__init__.py
+
       - name: Install poetry
         run: pip install poetry
 
@@ -60,6 +63,9 @@ jobs:
 
       - name: Extract Version from Tag
         run: echo "VERSION=${GITHUB_REF#refs/tags/test-v}" >> $GITHUB_ENV
+
+      - name: Set version variable in module file
+        run: echo "VERSION=${{ env.VERSION }}" > src/sindri/__init__.py
 
       - name: Install poetry
         run: pip install poetry
