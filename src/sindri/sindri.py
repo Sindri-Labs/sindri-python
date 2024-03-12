@@ -8,7 +8,7 @@ from pprint import pformat
 
 import requests
 
-from . import VERSION
+from . import __version__
 
 class Sindri:
     """
