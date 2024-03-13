@@ -257,6 +257,7 @@ class Sindri:
         include_proof_input: bool = False,
         include_proof: bool = False,
         include_public: bool = False,
+        include_smart_contract_calldata: bool = False,
         include_verification_key: bool = False,
     ) -> tuple[int, dict | list]:
         """
@@ -271,9 +272,10 @@ class Sindri:
             f"proof/{proof_id}/detail",
             data={
                 "include_proof_input": include_proof_input,
-                "include_public": include_public,
-                "include_verification_key": include_verification_key,
                 "include_proof": include_proof,
+                "include_public": include_public,
+                "include_smart_contract_calldata": include_smart_contract_calldata,
+                "include_verification_key": include_verification_key,
             },
         )
 
@@ -511,13 +513,67 @@ class Sindri:
 
         return response_json
 
-    def get_proof(self, proof_id: str, include_proof_input: bool = False) -> dict:
+    def get_circuit_smart_contract_verifier(self, circuit_id: str) -> str:
+        """Get the circuit's smart contract verifier code for `circuit_id`.
+
+        Returns:
+
+        - `str`: the smart contract verifier code
+
+        Raises `Sindri.APIError` if:
+
+        - the circuit's circuit type does not support smart contract verifier generation
+        """
+        if self.verbose_level > 0:
+            print(f"Circuit: Get circuit smart contract verifier for circuit_id: {circuit_id}")
+        response_status_code, response_json = self._hit_api(
+            "GET", f"circuit/{circuit_id}/smart_contract_verifier"
+        )
+        if response_status_code != 200:
+            raise Sindri.APIError(
+                f"Unable to fetch smart contract verifier code for circuit_id={circuit_id}."
+                f" status={response_status_code} response={response_json}"
+            )
+        # Extract smart_contract_verifier_code from response and check types
+        if not isinstance(response_json, dict):
+            raise Sindri.APIError(
+                "Received unexpected type for circuit smart contract verifier response."
+            )
+        try:
+            smart_contract_verifier_code: str = response_json["contract_code"]
+        except KeyError:
+            raise Sindri.APIError(
+                "Received unexpected type for circuit smart contract verifier response."
+            )
+        if not isinstance(smart_contract_verifier_code, str):
+            raise Sindri.APIError(
+                "Received unexpected type for circuit smart contract verifier response."
+            )
+
+        if self.verbose_level == 2:
+            print(smart_contract_verifier_code)
+
+        return smart_contract_verifier_code
+
+    def get_proof(
+        self,
+        proof_id: str,
+        include_proof_input: bool = False,
+        include_smart_contract_calldata: bool = False,
+    ) -> dict:
         """
         Get proof for `proof_id`.
 
         Parameters:
 
         - `include_proof_input: bool` specifies if the proof input should also be returned.
+        - `include_smart_contract_calldata: bool` specifies if the proof + public formated as
+        calldata for the circuit's smart contract verifier should also be returned.
+
+        Raises `Sindri.APIError` if:
+
+        - `include_smart_contract_calldata=True` and the proof's circuit type does not support
+        generating calldata for its circuit's smart contract verifier
         """
         if self.verbose_level > 0:
             print(f"Proof: Get proof detail for proof_id: {proof_id}")
@@ -526,6 +582,7 @@ class Sindri:
             include_proof_input=include_proof_input,
             include_proof=True,
             include_public=True,
+            include_smart_contract_calldata=include_smart_contract_calldata,
             include_verification_key=True,
         )
         if response_status_code != 200:
