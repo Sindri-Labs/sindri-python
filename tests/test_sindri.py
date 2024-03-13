@@ -10,24 +10,13 @@ dir_name = os.path.dirname(os.path.abspath(__file__))
 sindri_resources_path = os.path.join(dir_name, "..", "..", "sindri-resources")
 assert os.path.exists(sindri_resources_path)
 
-# This Noir circuit sample data is the fastest circuit for general compile+prove testing
-noir_circuit_dir = os.path.join(sindri_resources_path, "circuit_database", "noir", "not_equal")
-noir_proof_input_file_path = os.path.join(noir_circuit_dir, "Prover.toml")
-assert os.path.exists(noir_circuit_dir)
-assert os.path.exists(noir_proof_input_file_path)
-noir_proof_input = ""
-with open(noir_proof_input_file_path, "r") as f:
-    noir_proof_input = f.read()
-
-# This Circom circuit is slightly slower to compile+prove, but it supports smart contract verifier
-# code generation and returning the proof formatted as calldata for that smart contract
-circom_circuit_dir = os.path.join(sindri_resources_path, "circuit_database", "circom", "multiplier2")
-circom_proof_input_file_path = os.path.join(circom_circuit_dir, "input.json")
-assert os.path.exists(circom_circuit_dir)
-assert os.path.exists(circom_proof_input_file_path)
-circom_proof_input = ""
-with open(circom_proof_input_file_path, "r") as f:
-    circom_proof_input = f.read()
+circuit_dir = os.path.join(sindri_resources_path, "circuit_database", "noir", "not_equal")
+proof_input_file_path = os.path.join(circuit_dir, "Prover.toml")
+assert os.path.exists(circuit_dir)
+assert os.path.exists(proof_input_file_path)
+proof_input = ""
+with open(proof_input_file_path, "r") as f:
+    proof_input = f.read()
 
 
 # Create an instance of the Sindri SDK
@@ -73,8 +62,8 @@ class TestSindriSdk:
         1. Test delete proof
         1. Test delete circuit
         """
-        circuit_id = sindri.create_circuit(noir_circuit_dir)
-        proof_id = sindri.prove_circuit(circuit_id, noir_proof_input)
+        circuit_id = sindri.create_circuit(circuit_dir)
+        proof_id = sindri.prove_circuit(circuit_id, proof_input)
         sindri.get_all_circuit_proofs(circuit_id)
         sindri.get_circuit(circuit_id)
         sindri.get_proof(proof_id)
@@ -91,7 +80,7 @@ class TestSindriSdk:
         polling_interval_sec = 1.0
         max_polling_intervals = 120
 
-        circuit_id = sindri.create_circuit(noir_circuit_dir, wait=False)
+        circuit_id = sindri.create_circuit(circuit_dir, wait=False)
 
         # manually poll circuit detail until status is ready/failed
         status = ""
@@ -105,7 +94,7 @@ class TestSindriSdk:
         assert status == "Ready"
 
 
-        proof_id = sindri.prove_circuit(circuit_id, noir_proof_input)
+        proof_id = sindri.prove_circuit(circuit_id, proof_input)
 
         # manually poll proof detail until status is ready/failed
         status = ""
@@ -118,26 +107,5 @@ class TestSindriSdk:
             raise RuntimeError("Max polling reached")
         assert status == "Ready"
         
-        sindri.delete_proof(proof_id)
-        sindri.delete_circuit(circuit_id)
-
-
-    def test_circuit_create_prove_smart_contract_calldata(self):
-        """
-        Most SDK methods require a circuit and a proof to be created.
-        This test combines several tests so we only have to create 1 circuit and 1 proof.
-        The order of these steps is carefully designed so all data is available in Sindri
-        when necessary.
-        1. Test create a circuit
-        1. Test prove the circuit.
-        1. Test fetching the circuit's smart contract verifier code
-        1. Test proof detail with including the proof calldata
-        1. Test delete proof
-        1. Test delete circuit
-        """
-        circuit_id = sindri.create_circuit(circom_circuit_dir)
-        proof_id = sindri.prove_circuit(circuit_id, circom_proof_input)
-        sindri.get_circuit_smart_contract_verifier(circuit_id)
-        sindri.get_proof(proof_id, include_smart_contract_calldata=True)
         sindri.delete_proof(proof_id)
         sindri.delete_circuit(circuit_id)

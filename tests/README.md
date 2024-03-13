@@ -19,7 +19,7 @@ python3 -m venv venv
 # Activate virtual environment
 source venv/bin/activate
 # Install necessary modules
-pip install -U requests pytest
+pip install requests pytest
 # Run `deactivate` to deactivate virtual environment
 ```
 
