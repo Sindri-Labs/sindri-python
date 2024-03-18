@@ -24,7 +24,7 @@ jobs:
         run: poetry install
 
       - run: |
-          TAG=${{ github.ref_name }} ./build-docs.sh
+          TAG=${{ github.ref_name }} poetry run ./build-docs.sh
 
       - name: 'Save Generated Markdown'
         uses: actions/upload-artifact@v3
