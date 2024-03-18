@@ -254,7 +254,6 @@ class Sindri:
     def _hit_api_proof_detail(
         self,
         proof_id: str,
-        include_proof_input: bool = False,
         include_proof: bool = False,
         include_public: bool = False,
         include_smart_contract_calldata: bool = False,
@@ -271,7 +270,6 @@ class Sindri:
             "GET",
             f"proof/{proof_id}/detail",
             data={
-                "include_proof_input": include_proof_input,
                 "include_proof": include_proof,
                 "include_public": include_public,
                 "include_smart_contract_calldata": include_smart_contract_calldata,
@@ -407,7 +405,6 @@ class Sindri:
             "GET",
             f"circuit/{circuit_id}/proofs",
             data={
-                "include_proof_input": True,
                 "include_public": True,
                 "include_verification_key": True,
                 "include_proof": True,
@@ -466,7 +463,6 @@ class Sindri:
             "GET",
             "proof/list",
             data={
-                "include_proof_input": True,
                 "include_public": True,
                 "include_verification_key": True,
                 "include_proof": True,
@@ -558,7 +554,6 @@ class Sindri:
     def get_proof(
         self,
         proof_id: str,
-        include_proof_input: bool = False,
         include_smart_contract_calldata: bool = False,
     ) -> dict:
         """
@@ -566,7 +561,6 @@ class Sindri:
 
         Parameters:
 
-        - `include_proof_input: bool` specifies if the proof input should also be returned.
         - `include_smart_contract_calldata: bool` specifies if the proof + public formated as
         calldata for the circuit's smart contract verifier should also be returned.
 
@@ -579,7 +573,6 @@ class Sindri:
             print(f"Proof: Get proof detail for proof_id: {proof_id}")
         response_status_code, response_json = self._hit_api_proof_detail(
             proof_id,
-            include_proof_input=include_proof_input,
             include_proof=True,
             include_public=True,
             include_smart_contract_calldata=include_smart_contract_calldata,
@@ -679,7 +672,6 @@ class Sindri:
             for _ in range(self.max_polling_iterations):
                 response_status_code, response_json = self._hit_api_proof_detail(
                     proof_id,
-                    include_proof_input=False,
                     include_proof=False,
                     include_public=False,
                     include_verification_key=False,
