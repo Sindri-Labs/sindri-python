@@ -40,4 +40,6 @@ requests = "^2.13.0"
 
 [tool.poetry.group.dev.dependencies]
 lazydocs = "^0.4.8"
+mkdocs = "^1.5.3"
+mkdocs-awesome-pages-plugin = "^2.9.2"
 
