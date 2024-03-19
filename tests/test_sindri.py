@@ -137,7 +137,7 @@ class TestSindriSdk:
         """
         circuit_id = sindri.create_circuit(circom_circuit_dir)
         proof_id = sindri.prove_circuit(circuit_id, circom_proof_input)
-        sindri.get_circuit_smart_contract_verifier(circuit_id)
+        sindri.get_smart_contract_verifier(circuit_id)
         sindri.get_proof(proof_id, include_smart_contract_calldata=True)
         sindri.delete_proof(proof_id)
         sindri.delete_circuit(circuit_id)
