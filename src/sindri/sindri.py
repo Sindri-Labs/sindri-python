@@ -180,7 +180,7 @@ class Sindri:
   .***********************+     
   .***********************-""")
 
-    def _hit_api_circuit_create(self, circuit_upload_path: str) -> tuple[int, dict | list]:
+    def _hit_api_circuit_create(self, circuit_upload_path: str, tags: list[str] | None = None) -> tuple[int, dict | list]:
         """
         Submit a circuit to the `/circuit/create` endpoint.
 
@@ -210,11 +210,12 @@ class Sindri:
         return self._hit_api(
             "POST",
             "circuit/create",
+            data={"tags": tags},
             files=files,
         )
 
     def _hit_api_circuit_prove(
-        self, circuit_id: str, proof_input: str, prover_implementation: str | None = None
+        self, circuit_id: str, proof_input: str, perform_verify: bool = False, prover_implementation: str | None = None
     ) -> tuple[int, dict | list]:
         """
         Submit a circuit to the `/circuit/<circuit_id>/prove` endpoint.
@@ -229,7 +230,7 @@ class Sindri:
             f"circuit/{circuit_id}/prove",
             data={
                 "proof_input": proof_input,
-                "perform_verify": self.perform_verify,
+                "perform_verify": perform_verify,
                 "prover_implementation": prover_implementation,
             },
         )
@@ -286,7 +287,7 @@ class Sindri:
             "Sindri-Client": f"sindri-py-sdk/{self.version} ({platform.platform()}) python_version:{platform.python_version()}",  # noqa: E501
         }
 
-    def create_circuit(self, circuit_upload_path: str, wait: bool = True) -> str:
+    def create_circuit(self, circuit_upload_path: str, tags: list[str] | None = None, wait: bool = True) -> str:
         """
         Create a circuit and, if `wait=True`, poll the detail endpoint until the circuit
         has a `status` of `Ready` or `Failed`.
@@ -319,7 +320,7 @@ class Sindri:
         if self.verbose_level > 1:
             print(f"    upload_path:   {circuit_upload_path}")
 
-        response_status_code, response_json = self._hit_api_circuit_create(circuit_upload_path)
+        response_status_code, response_json = self._hit_api_circuit_create(circuit_upload_path, tags=tags)
         if response_status_code != 201:
             raise Sindri.APIError(
                 f"Unable to create a new circuit."
@@ -362,7 +363,7 @@ class Sindri:
                 )
 
         if self.verbose_level > 0:
-            self.get_circuit(circuit_id)
+            self.get_circuit(circuit_id, include_verification_key=True)
 
         # Circuit compilation success!
         return circuit_id
@@ -396,7 +397,7 @@ class Sindri:
                 f" status={response_status_code} response={response_json}"
             )
 
-    def get_all_circuit_proofs(self, circuit_id: str) -> list[dict]:
+    def get_all_circuit_proofs(self, circuit_id: str, include_proof: bool = False, include_public: bool = False, include_smart_contract_calldata: bool = False, include_verification_key: bool = False) -> list[dict]:
         """Get all proofs for `circuit_id`."""
         if self.verbose_level > 0:
             print(f"Proof: Get all proofs for circuit_id: {circuit_id}")
@@ -404,9 +405,10 @@ class Sindri:
             "GET",
             f"circuit/{circuit_id}/proofs",
             data={
-                "include_public": True,
-                "include_verification_key": True,
-                "include_proof": True,
+                "include_proof": include_proof,
+                "include_public": include_public,
+                "include_smart_contract_calldata": include_smart_contract_calldata,
+                "include_verification_key": include_verification_key,
             },
         )
         if response_status_code != 200:
@@ -427,14 +429,14 @@ class Sindri:
 
         return response_json
 
-    def get_all_circuits(self) -> list[dict]:
+    def get_all_circuits(self, include_verification_key: bool = False) -> list[dict]:
         """Get all circuits."""
         if self.verbose_level > 0:
             print("Circuit: Get all circuits")
         response_status_code, response_json = self._hit_api(
             "GET",
             "circuit/list",
-            data={"include_verification_key": True},
+            data={"include_verification_key": include_verification_key},
         )
         if response_status_code != 200:
             raise Sindri.APIError(
@@ -454,7 +456,7 @@ class Sindri:
 
         return response_json
 
-    def get_all_proofs(self) -> list[dict]:
+    def get_all_proofs(self, include_proof: bool = False, include_public: bool = False, include_smart_contract_calldata: bool = False, include_verification_key: bool = False) -> list[dict]:
         """Get all proofs."""
         if self.verbose_level > 0:
             print("Proof: Get all proofs")
@@ -462,9 +464,10 @@ class Sindri:
             "GET",
             "proof/list",
             data={
-                "include_public": True,
-                "include_verification_key": True,
-                "include_proof": True,
+                "include_proof": include_proof,
+                "include_public": include_public,
+                "include_smart_contract_calldata": include_smart_contract_calldata,
+                "include_verification_key": include_verification_key,
             },
         )
         if response_status_code != 200:
@@ -485,12 +488,12 @@ class Sindri:
 
         return response_json
 
-    def get_circuit(self, circuit_id: str) -> dict:
+    def get_circuit(self, circuit_id: str, include_verification_key: bool = True) -> dict:
         """Get circuit for `circuit_id`."""
         if self.verbose_level > 0:
             print(f"Circuit: Get circuit detail for circuit_id: {circuit_id}")
         response_status_code, response_json = self._hit_api_circuit_detail(
-            circuit_id, include_verification_key=True
+            circuit_id, include_verification_key=include_verification_key
         )
         if response_status_code != 200:
             raise Sindri.APIError(
@@ -553,7 +556,7 @@ class Sindri:
     def get_proof(
         self,
         proof_id: str,
-        include_smart_contract_calldata: bool = False,
+        include_proof: bool = True, include_public: bool = True, include_smart_contract_calldata: bool = False, include_verification_key: bool = False
     ) -> dict:
         """
         Get proof for `proof_id`.
@@ -572,10 +575,10 @@ class Sindri:
             print(f"Proof: Get proof detail for proof_id: {proof_id}")
         response_status_code, response_json = self._hit_api_proof_detail(
             proof_id,
-            include_proof=True,
-            include_public=True,
+            include_proof=include_proof,
+            include_public=include_public,
             include_smart_contract_calldata=include_smart_contract_calldata,
-            include_verification_key=True,
+            include_verification_key=include_verification_key,
         )
         if response_status_code != 200:
             raise Sindri.APIError(
@@ -616,6 +619,7 @@ class Sindri:
         circuit_id: str,
         proof_input: str,
         prover_implementation: str | None = None,
+        perform_verify: bool = False,
         wait: bool = True,
     ) -> str:
         """
@@ -641,15 +645,11 @@ class Sindri:
         # Return values
         proof_id = ""
 
-        # TODO: HANDLE the JSON/non-JSON
-        # Convert the proof_input into a json string
-        # proof_input_json_str = json.dumps(proof_input)
-
         # 1. Submit a proof, obtain a proof_id.
         if self.verbose_level > 0:
             print("Prove circuit")
         response_status_code, response_json = self._hit_api_circuit_prove(
-            circuit_id, proof_input, prover_implementation=prover_implementation
+            circuit_id, proof_input, perform_verify=perform_verify, prover_implementation=prover_implementation
         )
         if response_status_code != 201:
             raise Sindri.APIError(
