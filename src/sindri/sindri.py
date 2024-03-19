@@ -163,23 +163,22 @@ class Sindri:
         return response.status_code, response_json
 
     def _print_sindri_logo(self):
-        # https://ascii-generator.site/
+        # https://ascii-generator.site/ 32 columns
         print(
-            """
-                  Sindri API
-                      =-.
-                      ***=
-                     +****+
-                   .+******=
-                  .*****+***  =
-                  +***+--+**.-*:
-                 =***+----+*:**+
-                 **++=-:---+****
-                 +*-==:  :-=***-
-                  +--.    --**-
-                   ::      .=.
-              """
-        )
+            f"""Sindri API Python SDK - {self.version}
+     .+******************+.     
+     =********************=     
+ .:.  -==================-      
+=****                           
+=****-                          
+ .::-*+==================-      
+     =********************=     
+     .+******************+.     
+                           =**+:
+                          :*****
+    .:::::::::::::::::::::++==- 
+  .***********************+     
+  .***********************-""")
 
     def _hit_api_circuit_create(self, circuit_upload_path: str) -> tuple[int, dict | list]:
         """
@@ -509,7 +508,7 @@ class Sindri:
 
         return response_json
 
-    def get_circuit_smart_contract_verifier(self, circuit_id: str) -> str:
+    def get_smart_contract_verifier(self, circuit_id: str) -> str:
         """Get the circuit's smart contract verifier code for `circuit_id`.
 
         Returns:
