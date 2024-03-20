@@ -82,6 +82,52 @@ class Sindri:
             print(f"Sindri API Url: {self.api_url}")
             print(f"Sindri API Key: {self.api_key}\n")
 
+    def _get_circuit(self, circuit_id: str, include_verification_key: bool = False) -> dict:
+        """Hit the circuit_detail API endpoint and validate the response. Do not print anything.
+        This may raise `Sindri.APIError` if the response is invalid."""
+        response_status_code, response_json = self._hit_api(
+            "GET",
+            f"circuit/{circuit_id}/detail",
+            data={"include_verification_key": include_verification_key},
+        )
+        if response_status_code != 200:
+            raise Sindri.APIError(
+                f"Unable to fetch circuit_id={circuit_id}."
+                f" status={response_status_code} response={response_json}"
+            )
+        if not isinstance(response_json, dict):
+            raise Sindri.APIError("Received unexpected type for circuit detail response.")
+        return response_json
+
+    def _get_proof(
+        self,
+        proof_id: str,
+        include_proof: bool = False,
+        include_public: bool = False,
+        include_smart_contract_calldata: bool = False,
+        include_verification_key: bool = False,
+    ) -> dict:
+        """Hit the proof_detail API endpoint and validate the response. Do not print anything.
+        This may raise `Sindri.APIError` if the response is invalid."""
+        response_status_code, response_json = self._hit_api(
+            "GET",
+            f"proof/{proof_id}/detail",
+            data={
+                "include_proof": include_proof,
+                "include_public": include_public,
+                "include_smart_contract_calldata": include_smart_contract_calldata,
+                "include_verification_key": include_verification_key,
+            },
+        )
+        if response_status_code != 200:
+            raise Sindri.APIError(
+                f"Unable to fetch proof_id={proof_id}."
+                f" status={response_status_code} response={response_json}"
+            )
+        if not isinstance(response_json, dict):
+            raise Sindri.APIError("Received unexpected type for proof detail response.")
+        return response_json
+
     def _get_verbose_1_circuit_detail(self, circuit_detail: dict) -> dict:
         """Return a slim circuit detail object for printing."""
         return {
@@ -181,65 +227,6 @@ class Sindri:
     .:::::::::::::::::::::++==- 
   .***********************+     
   .***********************-"""
-        )
-
-    def _get_circuit(self, circuit_id: str, include_verification_key: bool = False) -> dict:
-        """Hit the circuit_detail API endpoint and validate the response. Do not print anything.
-        This may raise `Sindri.APIError` if the response is invalid."""
-        response_status_code, response_json = self._hit_api(
-            "GET",
-            f"circuit/{circuit_id}/detail",
-            data={"include_verification_key": include_verification_key},
-        )
-        if response_status_code != 200:
-            raise Sindri.APIError(
-                f"Unable to fetch circuit_id={circuit_id}."
-                f" status={response_status_code} response={response_json}"
-            )
-        if not isinstance(response_json, dict):
-            raise Sindri.APIError("Received unexpected type for circuit detail response.")
-        return response_json
-
-    def _hit_api_circuit_detail(
-        self, circuit_id: str, include_verification_key: bool = False
-    ) -> tuple[int, dict | list]:
-        """
-        Obtain circuit detail by hitting the `/circuit/<circuit_id>/detail` endpoint.
-
-        Return the `response.status_code` and the JSON decoded `response`.
-        This may raise `Sindri.APIError`.
-        This does not check if the `response.status_code` is the successful response (200).
-        """
-        return self._hit_api(
-            "GET",
-            f"circuit/{circuit_id}/detail",
-            data={"include_verification_key": include_verification_key},
-        )
-
-    def _hit_api_proof_detail(
-        self,
-        proof_id: str,
-        include_proof: bool = False,
-        include_public: bool = False,
-        include_smart_contract_calldata: bool = False,
-        include_verification_key: bool = False,
-    ) -> tuple[int, dict | list]:
-        """
-        Obtain proof detail by hitting the `/proof/<proof_id>/detail` endpoint.
-
-        Return the `response.status_code` and the JSON decoded `response`.
-        This may raise `Sindri.APIError`.
-        This does not check if the `response.status_code` is the successful response (200).
-        """
-        return self._hit_api(
-            "GET",
-            f"proof/{proof_id}/detail",
-            data={
-                "include_proof": include_proof,
-                "include_public": include_public,
-                "include_smart_contract_calldata": include_smart_contract_calldata,
-                "include_verification_key": include_verification_key,
-            },
         )
 
     def _set_json_request_headers(self) -> None:
@@ -555,28 +542,19 @@ class Sindri:
         """
         if self.verbose_level > 0:
             print(f"Proof: Get proof detail for proof_id: {proof_id}")
-        response_status_code, response_json = self._hit_api_proof_detail(
+        proof = self._get_proof(
             proof_id,
             include_proof=include_proof,
             include_public=include_public,
             include_smart_contract_calldata=include_smart_contract_calldata,
             include_verification_key=include_verification_key,
         )
-        if response_status_code != 200:
-            raise Sindri.APIError(
-                f"Unable to fetch proof_id={proof_id}."
-                f" status={response_status_code} response={response_json}"
-            )
-        if not isinstance(response_json, dict):
-            raise Sindri.APIError("Received unexpected type for proof detail response.")
-
         if self.verbose_level > 0:
-            proof_detail = response_json.copy()
+            proof_detail = proof.copy()
             if self.verbose_level == 1:
                 proof_detail = self._get_verbose_1_proof_detail(proof_detail)
             print(f"{pformat(proof_detail, indent=4)}\n")
-
-        return response_json
+        return proof
 
     def get_user_team_details(self) -> dict:
         """Get details about the user or team associated with the provided API Key."""
@@ -657,34 +635,21 @@ class Sindri:
             if self.verbose_level > 0:
                 print("Proof: Poll until Ready/Failed")
             for _ in range(self.max_polling_iterations):
-                response_status_code, response_json = self._hit_api_proof_detail(
+                proof = self._get_proof(
                     proof_id,
                     include_proof=False,
                     include_public=False,
+                    include_smart_contract_calldata=False,
                     include_verification_key=False,
                 )
-                if response_status_code != 200:
-                    raise Sindri.APIError(
-                        f"Failure to poll proof detail."
-                        f" status={response_status_code} response={response_json}"
-                    )
-                if not isinstance(response_json, dict):
-                    raise Sindri.APIError("Received unexpected type for proof detail response.")
-
-                proof_status = response_json.get("status", "")
+                proof_status = proof.get("status", "")
                 if proof_status == "Failed":
-                    raise Sindri.APIError(
-                        f"Prove circuit failed."
-                        f" status={response_status_code} response={response_json}"
-                    )
+                    raise Sindri.APIError(f"Prove circuit failed. error={proof.get('error', '')}")
                 if proof_status == "Ready":
                     break
                 time.sleep(self.polling_interval_sec)
             else:
-                raise Sindri.APIError(
-                    f"Prove circuit polling timed out."
-                    f" status={response_status_code} response={response_json}"
-                )
+                raise Sindri.APIError("Prove circuit polling timed out.")
 
         if self.verbose_level > 0:
             self.get_proof(proof_id)
