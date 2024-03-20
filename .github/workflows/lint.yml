@@ -34,19 +34,19 @@ jobs:
       - name: Check formatting with black
         if: success() || failure()
         run: |
-          black --check .
+          poetry run black --check .
 
       - name: Check import order with isort
         if: success() || failure()
         run: |
-          isort --check-only .
+          poetry run isort --check-only .
 
       - name: Lint with flake8
         if: success() || failure()
         run: |
-          flake8 .
+          poetry run flake8 .
 
       - name: Verify typing annotations
         if: success() || failure()
         run: |
-          mypy .
+          poetry run mypy .
