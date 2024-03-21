@@ -357,26 +357,13 @@ class Sindri:
                 f" status={response_status_code} response={response_json}"
             )
 
-    def get_all_circuit_proofs(
-        self,
-        circuit_id: str,
-        include_proof: bool = False,
-        include_public: bool = False,
-        include_smart_contract_calldata: bool = False,
-        include_verification_key: bool = False,
-    ) -> list[dict]:
+    def get_all_circuit_proofs(self, circuit_id: str) -> list[dict]:
         """Get all proofs for `circuit_id`."""
         if self.verbose_level > 0:
             print(f"Proof: Get all proofs for circuit_id: {circuit_id}")
         response_status_code, response_json = self._hit_api(
             "GET",
             f"circuit/{circuit_id}/proofs",
-            data={
-                "include_proof": include_proof,
-                "include_public": include_public,
-                "include_smart_contract_calldata": include_smart_contract_calldata,
-                "include_verification_key": include_verification_key,
-            },
         )
         if response_status_code != 200:
             raise Sindri.APIError(
@@ -396,14 +383,13 @@ class Sindri:
 
         return response_json
 
-    def get_all_circuits(self, include_verification_key: bool = False) -> list[dict]:
+    def get_all_circuits(self) -> list[dict]:
         """Get all circuits."""
         if self.verbose_level > 0:
             print("Circuit: Get all circuits")
         response_status_code, response_json = self._hit_api(
             "GET",
             "circuit/list",
-            data={"include_verification_key": include_verification_key},
         )
         if response_status_code != 200:
             raise Sindri.APIError(
@@ -423,25 +409,13 @@ class Sindri:
 
         return response_json
 
-    def get_all_proofs(
-        self,
-        include_proof: bool = False,
-        include_public: bool = False,
-        include_smart_contract_calldata: bool = False,
-        include_verification_key: bool = False,
-    ) -> list[dict]:
+    def get_all_proofs(self) -> list[dict]:
         """Get all proofs."""
         if self.verbose_level > 0:
             print("Proof: Get all proofs")
         response_status_code, response_json = self._hit_api(
             "GET",
             "proof/list",
-            data={
-                "include_proof": include_proof,
-                "include_public": include_public,
-                "include_smart_contract_calldata": include_smart_contract_calldata,
-                "include_verification_key": include_verification_key,
-            },
         )
         if response_status_code != 200:
             raise Sindri.APIError(
