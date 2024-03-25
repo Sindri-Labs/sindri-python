@@ -1,3 +1,26 @@
+"""
+## Usage
+
+```python
+# Download some sample data
+# git clone https://github.com/Sindri-Labs/sindri-resources.git
+
+# pip install sindri
+from sindri.sindri import Sindri
+
+# Initialize
+sindri = Sindri("<YOUR_API_KEY>", verbose_level=2)
+
+# Upload a Circuit
+circuit_upload_path: str = "sindri-resources/circuit_database/circom/multiplier2"
+circuit_id: str = sindri.create_circuit(circuit_upload_path)
+
+# Generate a Proof
+proof_input_file_path = "sindri-resources/circuit_database/circom/multiplier2/input.json"
+with open(proof_input_file_path, "r") as f:
+    proof_id: str = sindri.prove_circuit(circuit_id, f.read())
+```
+"""
 import io
 import json
 import os
@@ -13,31 +36,7 @@ from . import __version__
 
 
 class Sindri:
-    """# Sindri API SDK
-
-    A utility class for interacting with the [Sindri API](https://www.sindri.app).
-
-    ### Dependencies
-
-    - `requests`: (`pip install requests`)
-
-    ### Usage Example
-
-    ```python
-    circuit_upload_path = "circom/multiplier2"
-    proof_input = ""
-    proof_input_file_path = "circom/multiplier2/input.json"
-    with open(proof_input_file_path, "r") as f:
-        proof_input = f.read()
-
-    # Run Sindri API
-    API_KEY = <YOUR_API_KEY>
-    sindri = Sindri(API_KEY)
-    circuit_id = sindri.create_circuit(circuit_upload_path)
-    proof_id = sindri.prove_circuit(circuit_id, proof_input)
-    ```
-
-    """
+    """A utility class for interacting with the [Sindri API](https://www.sindri.app)."""
 
     class APIError(Exception):
         """Custom Exception for Sindri API Errors"""
@@ -47,18 +46,24 @@ class Sindri:
     DEFAULT_SINDRI_API_URL = "https://sindri.app/api/"
     API_VERSION = "v1"
 
-    def __init__(
-        self,
-        api_key: str,
-        api_url: str = DEFAULT_SINDRI_API_URL,
-        verbose_level: int = 0,
-    ):
-        """
-        Parameters
+    VERBOSE_LEVELS: list[int] = [0, 1, 2]
 
-        - `api_key: str`: Sindri API Key
-        - `api_url: str`: Sindri API Url
-        - `verbose_level: int`: Stdout print level. Options=`[0,1,2]`
+    def __init__(self, api_key: str, verbose_level: int = 0, **kwargs):
+        """Initialize an instance of the Sindri SDK.
+
+        Args:
+        - `api_key`: Your Sindri API Key.
+        - `verbose_level`: Must be either `0`, `1`, or `2`.
+            - `0`: Do not print anything to stdout.
+            - `1`: Print only necesessary information from Circuit/Proof objects.
+            - `2`: Print everything.
+
+        Returns:
+        - `sindri`: An instance of the class configured with your Sindri API Key.
+
+        Raises:
+        - `Sindri.APIError`:
+            - Your API Key is improperly formatted.
         """
         # Obtain version from module
         self.version = __version__
@@ -71,14 +76,25 @@ class Sindri:
         self.polling_interval_sec: int = 1  # polling interval for circuit compilation & proving
         self.max_polling_iterations: int = 172800  # 2 days with polling interval 1 second
         self.perform_verify: bool = False
-        self.set_api_url(api_url)
+
+        # Set API Url
+        api_url = kwargs.get("api_url", self.DEFAULT_SINDRI_API_URL)
+        if not isinstance(api_url, str):
+            raise Sindri.APIError("Invalid API Url")
+        if api_url == "":
+            raise Sindri.APIError("Invalid API Url")
+        if not api_url.endswith(self.API_VERSION) or not api_url.endswith(f"{self.API_VERSION}/"):
+            # Append f"{self.API_VERSION}/" to api_url
+            self._api_url = os.path.join(api_url, f"{self.API_VERSION}/")
+
+        # Set API Key
         self.set_api_key(api_key)
 
         # Set desired verbose level
         self.set_verbose_level(verbose_level)
         if self.verbose_level > 0:
             self._print_sindri_logo()
-            print(f"Sindri API Url: {self.api_url}")
+            print(f"Sindri API Url: {self._api_url}")
             print(f"Sindri API Key: {self.api_key}\n")
 
     def _get_circuit(self, circuit_id: str, include_verification_key: bool = False) -> dict:
@@ -171,7 +187,7 @@ class Sindri:
             data = {}
 
         # Construct the full path to the API endpoint.
-        full_path = os.path.join(self.api_url, path)
+        full_path = os.path.join(self._api_url, path)
         try:
             if method == "POST":
                 response = requests.post(
@@ -241,26 +257,30 @@ class Sindri:
     def create_circuit(
         self, circuit_upload_path: str, tags: list[str] | None = None, wait: bool = True
     ) -> str:
-        """Create a circuit.
+        """Create a circuit. For information, refer to the
+        [API docs](https://sindri.app/docs/reference/api/circuit-create/).
 
         Args:
-            `circuit_upload_path`: The path to a directory containing your circuit files or
-                the path to a compressed file (`.tar.gz` or `.zip`) of your circuit directory.
-                If it is a directory, it will automatically be tarred before sending.
-            `tags`: A list of tags to assign the circuit. Defaults to `[]"latest"]` if not
-                sepecified.
-            `wait`: If `True`, block until the circuit is finished compiling. If `False`, this
-                will submit the circuit and return immediately.
+        - `circuit_upload_path`: The path to either
+            - A directory containing your circuit files
+            - A compressed file (`.tar.gz` or `.zip`) of your circuit directory
+        - `tags`: A list of tags to assign the circuit. Defaults to `["latest"]` if not
+        sepecified.
+        - `wait`:
+            - If `True`, block until the circuit is finished compiling.
+            - If `False`, submit the circuit and return immediately.
 
         Returns:
-            `circuit_id`: The unique idetifier for your circuit. This is generated by Sindri.
+        - `circuit_id`: The UUID4 identifier associated with this circuit. This is generated by
+        Sindri.
 
         Raises:
-            `Sindri.APIError`: If your API Key is invalid, there is an error connecting to the
-                Sindri API, there is an error with your circuit upload, or the
-                circuit has a compilation error (if `wait=True`).
+        - `Sindri.APIError`:
+            - Your API Key is invalid.
+            - There is an error connecting to the Sindri API.
+            - There is an error with your circuit upload.
+            - The circuit has a compilation error (if `wait=True`).
         """
-
         # Return value
         circuit_id = ""  # set later
 
@@ -329,11 +349,20 @@ class Sindri:
         return circuit_id
 
     def delete_circuit(self, circuit_id: str) -> None:
-        """
-        Delete a circuit by hitting the `/circuit/<circuit_id>/delete` endpoint.
-        This also deletes all of the circuit's proofs.
+        """Mark the specified circuit and any of its related proofs as deleted. For information,
+        refer to the [API docs](https://sindri.app/docs/reference/api/circuit-delete/).
 
-        Returns `None` if the deletion was successful. Else, raise `Sindri.APIError`.
+        Args:
+        - `circuit_id`: The circuit identifier of the circuit.
+
+        Returns:
+        - `None`
+
+        Raises:
+        - `Sindri.APIError`:
+            - Your API Key is invalid.
+            - There is an error connecting to the Sindri API.
+            - The specified circuit does not exist.
         """
         response_status_code, response_json = self._hit_api(
             "DELETE", f"circuit/{circuit_id}/delete"
@@ -345,10 +374,20 @@ class Sindri:
             )
 
     def delete_proof(self, proof_id: str) -> None:
-        """
-        Delete a proof by hitting the `/proof/<proof_id>/delete` endpoint.
+        """Mark the specified proof as deleted. For information, refer to the
+        [API docs](https://sindri.app/docs/reference/api/proof-delete/).
 
-        Returns `None` if the deletion was successful. Else, raise `Sindri.APIError`.
+        Args:
+        - `proof_id`: The UUID4 identifier associated with this proof.
+
+        Returns:
+        - `None`
+
+        Raises:
+        - `Sindri.APIError`:
+            - Your API Key is invalid.
+            - There is an error connecting to the Sindri API.
+            - The specified proof does not exist.
         """
         response_status_code, response_json = self._hit_api("DELETE", f"proof/{proof_id}/delete")
         if response_status_code != 200:
@@ -358,7 +397,21 @@ class Sindri:
             )
 
     def get_all_circuit_proofs(self, circuit_id: str) -> list[dict]:
-        """Get all proofs for `circuit_id`."""
+        """Return a list of proof infos for the provided circuit_id. For information, refer to the
+        [API docs](https://sindri.app/docs/reference/api/circuit-proofs/).
+
+        Args:
+        - `circuit_id`: The circuit identifier of the circuit.
+
+        Returns:
+        - `proofs`: A list of proof infos.
+
+        Raises:
+        - `Sindri.APIError`:
+            - Your API Key is invalid.
+            - There is an error connecting to the Sindri API.
+            - The specified circuit does not exist.
+        """
         if self.verbose_level > 0:
             print(f"Proof: Get all proofs for circuit_id: {circuit_id}")
         response_status_code, response_json = self._hit_api(
@@ -384,7 +437,20 @@ class Sindri:
         return response_json
 
     def get_all_circuits(self) -> list[dict]:
-        """Get all circuits."""
+        """Return a list of all circuit infos. For information, refer to the
+        [API docs](https://sindri.app/docs/reference/api/circuit-list/).
+
+        Args:
+        - `None`
+
+        Returns:
+        - `circuits`: A list of circuit infos.
+
+        Raises:
+        - `Sindri.APIError`:
+            - Your API Key is invalid.
+            - There is an error connecting to the Sindri API.
+        """
         if self.verbose_level > 0:
             print("Circuit: Get all circuits")
         response_status_code, response_json = self._hit_api(
@@ -410,7 +476,23 @@ class Sindri:
         return response_json
 
     def get_circuit(self, circuit_id: str, include_verification_key: bool = True) -> dict:
-        """Get circuit for `circuit_id`."""
+        """Get info for an existing circuit. For information, refer to the
+        [API docs](https://sindri.app/docs/reference/api/circuit-detail/).
+
+        Args:
+        - `circuit_id`: The circuit identifier of the circuit.
+        - `include_verification_key`: Indicates whether to include the verification key in the
+        response.
+
+        Returns:
+        - `circuit`: The info for a circuit.
+
+        Raises:
+        - `Sindri.APIError`:
+            - Your API Key is invalid.
+            - There is an error connecting to the Sindri API.
+            - The specified circuit does not exist.
+        """
         if self.verbose_level > 0:
             print(f"Circuit: Get circuit detail for circuit_id: {circuit_id}")
         circuit = self._get_circuit(circuit_id, include_verification_key=include_verification_key)
@@ -422,15 +504,24 @@ class Sindri:
         return circuit
 
     def get_smart_contract_verifier(self, circuit_id: str) -> str:
-        """Get the circuit's smart contract verifier code for `circuit_id`.
+        """Get the smart contract verifier for an existing circuit.
+
+        NOTE: This method wraps an experimental Sindri API endpoint is subject to change at
+        any time.
+
+        Args:
+        - `circuit_id`: The circuit identifier of the circuit.
 
         Returns:
+        - `smart_contract_verifier_code`: The smart contract verifier code for the circuit.
 
-        - `str`: the smart contract verifier code
-
-        Raises `Sindri.APIError` if:
-
-        - the circuit's circuit type does not support smart contract verifier generation
+        Raises:
+        - `Sindri.APIError`:
+            - Your API Key is invalid.
+            - There is an error connecting to the Sindri API.
+            - The specified circuit does not exist.
+            - The circuit's type does not support this feature.
+            - The circuit was compiled before this feature was released.
         """
         if self.verbose_level > 0:
             print(f"Circuit: Get circuit smart contract verifier for circuit_id: {circuit_id}")
@@ -471,18 +562,29 @@ class Sindri:
         include_smart_contract_calldata: bool = False,
         include_verification_key: bool = False,
     ) -> dict:
-        """
-        Get proof for `proof_id`.
+        """Get info for an existing proof. For information, refer to the
+        [API docs](https://sindri.app/docs/reference/api/proof-detail/).
 
-        Parameters:
+        Args:
+        - `proof_id`: The UUID4 identifier associated with this proof.
+        - `include_proof`: Indicates whether to include the proof in the response.
+        - `include_public`: Indicates whether to include the public inputs in the response.
+        - `include_smart_contract_calldata`: Indicates whether to include the proof and public
+        formatted as smart contract calldata in the response.
+        - `include_verification_key`: Indicates whether to include the verification key in the
+        response.
 
-        - `include_smart_contract_calldata: bool` specifies if the proof + public formated as
-        calldata for the circuit's smart contract verifier should also be returned.
+        Returns:
+        - `proof`: The info for a proof.
 
-        Raises `Sindri.APIError` if:
-
-        - `include_smart_contract_calldata=True` and the proof's circuit type does not support
-        generating calldata for its circuit's smart contract verifier
+        Raises:
+        - `Sindri.APIError`:
+            - Your API Key is invalid.
+            - There is an error connecting to the Sindri API.
+            - The specified proof does not exist.
+            - `include_smart_contract_calldata=True` and the proof's circuit type does not support
+            generating calldata for its circuit's smart contract verifier or the proof was
+            generated before this feature was released.
         """
         if self.verbose_level > 0:
             print(f"Proof: Get proof detail for proof_id: {proof_id}")
@@ -501,7 +603,19 @@ class Sindri:
         return proof
 
     def get_user_team_details(self) -> dict:
-        """Get details about the user or team associated with the provided API Key."""
+        """Get details about the user or team associated with the configured API Key.
+
+        Args:
+        - `None`
+
+        Returns:
+        - `team`: The info for the user/team.
+
+        Raises:
+        - `Sindri.APIError`:
+            - Your API Key is invalid.
+            - There is an error connecting to the Sindri API.
+        """
         if self.verbose_level > 0:
             print("User/Team: Get user/team details for the provided API Key.")
         response_status_code, response_json = self._hit_api("GET", "team/me")
@@ -526,26 +640,33 @@ class Sindri:
         perform_verify: bool = False,
         wait: bool = True,
     ) -> str:
+        """Prove a circuit with specified inputs. For information, refer to the
+        [API docs](https://sindri.app/docs/reference/api/proof-create/).
+
+        Args:
+        - `circuit_id`: The circuit identifier of the circuit.
+        - `proof_input`: A string representing proof input which may be formatted as JSON for any
+        framework. Noir circuits optionally accept TOML formatted proof input.
+        - `prover_implementation`: For Sindri internal usage. The default value, `None`, chooses
+        the best supported prover implementation based on a variety of factors including the
+        available hardware, proving scheme, circuit size, and framework.
+        - `perform_verify`: A boolean indicating whether to perform an internal verification check
+        during the proof creation.
+        - `wait`:
+            - If `True`, block until the proof is finished generating.
+            - If `False`, submit the proof and return immediately.
+
+        Returns:
+        - `proof_id`: The UUID4 identifier associated with this proof. This is generated by Sindri.
+
+        Raises:
+        - `Sindri.APIError`:
+            - Your API Key is invalid.
+            - There is an error connecting to the Sindri API.
+            - The specified circuit does not exist.
+            - The proof input is improperly formatted.
+            - The proof generation fails. (if `wait=True`).
         """
-        Prove a circuit given a `circuit_id` and a `proof_input` and, if `wait=True`, poll the
-        detail endpoint until the proof has a `status` of `Ready` or `Failed`.
-
-        Return
-        - str: proof_id
-
-        Raises `Sindri.APIError` if
-
-        - Invalid API Key
-        - Unable to connect to the API
-        - Circuit does not exist
-        - If `wait=True`, circuit does not have a `status` of `Ready`
-
-        NOTE: `prover_implementation` is currently only supported for Sindri internal usage.
-        The default value, `None`, chooses the best supported prover implementation based on a
-        variety of factors including the available hardware, proving scheme, circuit size, and
-        framework.
-        """
-
         # Return values
         proof_id = ""
 
@@ -602,7 +723,18 @@ class Sindri:
         return proof_id
 
     def set_api_key(self, api_key: str) -> None:
-        """Set the API Key and headers for the Sindri instance."""
+        """Set the API Key for the Sindri instance.
+
+        Args:
+        - `api_key`: Your Sindri API Key.
+
+        Returns:
+        - `None`
+
+        Raises:
+        - `Sindri.APIError`:
+            - Your API Key is improperly formatted.
+        """
         if not isinstance(api_key, str):
             raise Sindri.APIError("Invalid API Key")
         if api_key == "":
@@ -612,44 +744,24 @@ class Sindri:
         if self.verbose_level > 0:
             print(f"Sindri API Key: {self.api_key}")
 
-    def set_api_url(self, api_url: str) -> None:
+    def set_verbose_level(self, verbose_level: int) -> None:
+        """Set the verbosity level for stdout printing.
+
+        Args:
+        - `verbose_level`: Must be either `0`, `1`, or `2`.
+            - `0`: Do not print anything to stdout.
+            - `1`: Print only necesessary information from Circuit/Proof objects.
+            - `2`: Print everything.
+
+        Returns:
+        - `None`
+
+        Raises:
+        - `Sindri.APIError`:
+            - `verbose_level` is invalid.
         """
-        Set the API Url for the Sindri instance.
-
-        NOTE: `v1/` is appended to the Sindri API Url if it is not present.
-        - Example: `https://sindri.app/api/` becomes `https://sindri.app/api/v1/`
-        """
-        if not isinstance(api_url, str):
-            raise Sindri.APIError("Invalid API Url")
-        if api_url == "":
-            raise Sindri.APIError("Invalid API Url")
-        if not api_url.endswith(self.API_VERSION) or not api_url.endswith(f"{self.API_VERSION}/"):
-            # Append f"{self.API_VERSION}/" to api_url
-            self.api_url = os.path.join(api_url, f"{self.API_VERSION}/")
-        if self.verbose_level > 0:
-            print(f"Sindri API Url: {self.api_url}")
-
-    def set_verbose_level(self, level: int) -> None:
-        """
-        Set the verbosity level for stdout printing.
-
-        Parameters:
-
-        - `level: int` must be in `[0,1,2]`
-
-        Levels:
-
-        - `0`: Do not print anything to stdout
-        - `1`: Print only necesessary information from Circuit/Proof objects
-        - `2`: Print everything
-
-        Raises `Sindri.APIError` if
-
-        - `level` is invalid.
-        """
-        error_msg = "Invalid verbose_level. Must be an int in [0,1,2]."
-        if not isinstance(level, int):
-            raise Sindri.APIError(error_msg)
-        elif level not in [0, 1, 2]:
-            raise Sindri.APIError(error_msg)
-        self.verbose_level = level
+        if verbose_level not in Sindri.VERBOSE_LEVELS:
+            raise Sindri.APIError(
+                f"Invalid verbose_level. Must be an int in {Sindri.VERBOSE_LEVELS}."
+            )
+        self.verbose_level = verbose_level
