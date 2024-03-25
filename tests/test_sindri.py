@@ -57,9 +57,6 @@ class TestSindriSdk:
     def test_get_all_circuits(self):
         sindri.get_all_circuits()
 
-    def test_get_all_proofs(self):
-        sindri.get_all_proofs()
-
     def test_circuit_create_prove_other(self):
         """
         Most SDK methods require a circuit and a proof to be created.

@@ -409,32 +409,6 @@ class Sindri:
 
         return response_json
 
-    def get_all_proofs(self) -> list[dict]:
-        """Get all proofs."""
-        if self.verbose_level > 0:
-            print("Proof: Get all proofs")
-        response_status_code, response_json = self._hit_api(
-            "GET",
-            "proof/list",
-        )
-        if response_status_code != 200:
-            raise Sindri.APIError(
-                f"Unable to fetch proofs."
-                f" status={response_status_code} response={response_json}"
-            )
-        if not isinstance(response_json, list):
-            raise Sindri.APIError("Received unexpected type for proof list response.")
-
-        if self.verbose_level > 0:
-            proof_detail_list = response_json.copy()
-            if self.verbose_level == 1:
-                proof_detail_list = []
-                for proof_detail in response_json:
-                    proof_detail_list.append(self._get_verbose_1_proof_detail(proof_detail))
-            print(f"{pformat(proof_detail_list, indent=4)}\n")
-
-        return response_json
-
     def get_circuit(self, circuit_id: str, include_verification_key: bool = True) -> dict:
         """Get circuit for `circuit_id`."""
         if self.verbose_level > 0:
