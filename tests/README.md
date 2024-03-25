@@ -46,3 +46,9 @@ Prefixing ENVs:
 ```bash
 SINDRI_API_KEY=your_api_key SINDRI_API_URL=https://sindri.app/api pytest
 ```
+
+For Sindri internal developers:
+- If you are running the sindri api locally at ~/forge with ~/forge/API_KEY file populated with a valid api key
+```bash
+SINDRI_API_URL=http://localhost/api SINDRI_API_KEY=$(cat ~/forge/API_KEY) pytest
+```
