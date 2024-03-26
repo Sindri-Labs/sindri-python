@@ -32,8 +32,8 @@ from pprint import pformat
 
 import requests
 
-from . import __version__
 
+__version__ = "v0.0.0"
 
 class Sindri:
     """A utility class for interacting with the [Sindri API](https://www.sindri.app)."""
