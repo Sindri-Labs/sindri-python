@@ -28,7 +28,7 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
 
       - name: Set version variable in module file
-        run: sed -i 's/v0.0.0/${{ github.ref_name }}/g' src/sindri/__init__.py
+        run: sed -i 's/v0.0.0/${{ github.ref_name }}/g' src/sindri/sindri.py
 
       - name: Install poetry
         run: pip install poetry
