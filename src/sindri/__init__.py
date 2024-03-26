@@ -1,5 +1,6 @@
 from .sindri import Sindri, __version__
-__all__ = ['Sindri']
+
+__all__ = ["Sindri"]
 __author__ = "Sindri Labs LLC"
 __email__ = "hello@sindri.app"
 __license__ = "MIT"
