@@ -210,7 +210,6 @@ class TestInitSindriSdkWithUrl:
 
         # Invalid api_url and valid base_url should return base_url.
         # api_url is ignored because base_url is prioritized
-        expected_resulting_api_url = "https://base-url.sindri.app/api/v1/"
         api_url = "https://api-url.sindri.app/apiiiiii"
         base_url = "https://base-url.sindri.app"
         s = Sindri("a", api_url=api_url, base_url=base_url)
