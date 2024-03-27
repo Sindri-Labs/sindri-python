@@ -33,22 +33,22 @@ When running `pytest`, these environment variables must be set in your environme
 ### Run Pytest
 You must be in the root directory of this repo: `cd ..`
 
-Here are several options for running tests with environment variables:
+Here are several options for running the pytest unit tests with environment variables:
 
-Exporting ENVs:
+#### Exporting ENVs
 ```bash
 export SINDRI_API_KEY=your_api_key
 export SINDRI_API_URL=https://sindri.app/api
 pytest
 ```
 
-Prefixing ENVs:
+#### Prefixing ENVs
 ```bash
 SINDRI_API_KEY=your_api_key SINDRI_API_URL=https://sindri.app/api pytest
 ```
 
-For Sindri internal developers:
-- If you are running the sindri api locally at ~/forge with ~/forge/API_KEY file populated with a valid api key
+#### Prefixing ENVs for Sindri internal developers
+If you are running the Sindri api locally at `~/forge` with `~/forge/API_KEY` file populated with a valid api key, you can invoke the `pytest` unit tests to hit your local Sindri API instance with:
 ```bash
 SINDRI_API_URL=http://localhost/api SINDRI_API_KEY=$(cat ~/forge/API_KEY) pytest
 ```
