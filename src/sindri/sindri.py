@@ -70,20 +70,17 @@ class Sindri:
 
         self.headers_json: dict = {}  # set in set_api_key()
 
-        # Do not print anything during initial setup
+        # Do not print anything during initial setup.
         self.set_verbose_level(0)
 
         self.polling_interval_sec: int = 1  # polling interval for circuit compilation & proving
         self.max_polling_iterations: int = 172800  # 2 days with polling interval 1 second
         self.perform_verify: bool = False
 
-        # Set API Url
         self._api_url = self._get_api_url_from_init_kwargs(**kwargs)
-
-        # Set API Key
         self.set_api_key(api_key)
 
-        # Set desired verbose level
+        # With initial setup complete, set desired verbose level.
         self.set_verbose_level(verbose_level)
         if self.verbose_level > 0:
             self._print_sindri_logo()
@@ -91,10 +88,9 @@ class Sindri:
             print(f"Sindri API Key: {self.api_key}\n")
 
     def _get_api_url_from_init_kwargs(self, **kwargs) -> str:
-        """Given the `kwargs` from the `__init__` method, return the api url.
-        This looks for `api_url` and `base_url` in `**kwargs`. `base_url` is processed first,
-        then `api_url` if `base_url` is not present. Finally, if neither are present, this will
-        return the default api url.
+        """Receive `kwargs` from `Sindri.__init__()` and return the API URL.
+        This examines `**kwargs` for `base_url` and `api_url`, in that order.
+        If neither are present, return the default API URL.
         """
 
         def is_url(url: str) -> bool:
@@ -105,14 +101,14 @@ class Sindri:
             except ValueError:
                 return False
 
-        # Order of precedence for setting self._api_url
+        # Order of precedence for obtaining the API URL:
         # 1. `base_url` is in kwargs
         url = kwargs.get("base_url", None)
         if url is not None:
             error_msg: str = "Invalid 'base_url' provided."
             if not isinstance(url, str):
                 raise Sindri.APIError(error_msg)
-            # Remove trailing slash "/"
+            # Remove all trailing slashes "/"
             url = url.rstrip("/")
             # Validate str is a url
             if not is_url(url):
@@ -126,11 +122,11 @@ class Sindri:
         # 2. `api_url` is in kwargs
         url = kwargs.get("api_url", None)
         if url is not None:
-            print("\nWARNING: 'api_url' is deprecated. Use 'base_url'.\n")
+            print("\nWARNING: 'api_url' is deprecated. Please use 'base_url' instead.\n")
             error_msg = "Invalid 'api_url' provided."
             if not isinstance(url, str):
                 raise Sindri.APIError(error_msg)
-            # Remove trailing slash "/"
+            # Remove all trailing slashes "/"
             url = url.rstrip("/")
             # Validate str is a url
             if not is_url(url):
@@ -276,18 +272,18 @@ class Sindri:
         # https://ascii-generator.site/ 32 columns
         print(
             f"""Sindri API Python SDK - {self.version}
-     .+******************+.     
-     =********************=     
- .:.  -==================-      
-=****                           
-=****-                          
- .::-*+==================-      
-     =********************=     
-     .+******************+.     
+     .+******************+.
+     =********************=
+ .:.  -==================-
+=****
+=****-
+ .::-*+==================-
+     =********************=
+     .+******************+.
                            =**+:
                           :*****
-    .:::::::::::::::::::::++==- 
-  .***********************+     
+    .:::::::::::::::::::::++==-
+  .***********************+
   .***********************-"""
         )
 
