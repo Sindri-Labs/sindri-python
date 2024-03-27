@@ -28,7 +28,7 @@ poetry install
 When running `pytest`, these environment variables must be set in your environment. You may prefix your command with the environment variables as well. For example: `SINDRI_API_KEY=your_api_key pytest`
 
 - `SINDRI_API_KEY=your_api_key` *Required*
-- `SINDRI_API_URL=https://sindri.app/api` *Optional. Default value shown*
+- `SINDRI_BASE_URL=https://sindri.app` *Optional. Default value shown*
 
 ### Run Pytest
 You must be in the root directory of this repo: `cd ..`
@@ -38,13 +38,13 @@ Here are several options for running the pytest unit tests with environment vari
 #### Exporting ENVs
 ```bash
 export SINDRI_API_KEY=your_api_key
-export SINDRI_API_URL=https://sindri.app/api
+export SINDRI_BASE_URL=https://sindri.app
 pytest
 ```
 
 #### Prefixing ENVs
 ```bash
-SINDRI_API_KEY=your_api_key SINDRI_API_URL=https://sindri.app/api pytest
+SINDRI_API_KEY=your_api_key SINDRI_BASE_URL=https://sindri.app pytest
 ```
 
 #### Prefixing ENVs for Sindri internal developers
