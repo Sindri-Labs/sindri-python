@@ -6,7 +6,7 @@
 # git clone https://github.com/Sindri-Labs/sindri-resources.git
 
 # pip install sindri
-from sindri.sindri import Sindri
+from sindri import Sindri
 
 # Initialize
 sindri = Sindri("<YOUR_API_KEY>", verbose_level=2)
