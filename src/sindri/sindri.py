@@ -78,14 +78,16 @@ class Sindri:
         self.perform_verify: bool = False
 
         # Set API Url
-        api_url = kwargs.get("api_url", self.DEFAULT_SINDRI_API_URL)
-        if not isinstance(api_url, str):
+        self._api_url = kwargs.get("api_url", self.DEFAULT_SINDRI_API_URL)
+        if not isinstance(self._api_url, str):
             raise Sindri.APIError("Invalid API Url")
-        if api_url == "":
+        if self._api_url == "":
             raise Sindri.APIError("Invalid API Url")
-        if not api_url.endswith(self.API_VERSION) or not api_url.endswith(f"{self.API_VERSION}/"):
-            # Append f"{self.API_VERSION}/" to api_url
-            self._api_url = os.path.join(api_url, f"{self.API_VERSION}/")
+        if not self._api_url.endswith(self.API_VERSION) or not self._api_url.endswith(
+            f"{self.API_VERSION}/"
+        ):
+            # Append f"{self.API_VERSION}/" to self._api_url
+            self._api_url = os.path.join(self._api_url, f"{self.API_VERSION}/")
 
         # Set API Key
         self.set_api_key(api_key)
