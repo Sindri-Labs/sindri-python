@@ -50,5 +50,5 @@ SINDRI_API_KEY=your_api_key SINDRI_API_URL=https://sindri.app/api pytest
 #### Prefixing ENVs for Sindri internal developers
 If you are running the Sindri api locally at `~/forge` with `~/forge/API_KEY` file populated with a valid api key, you can invoke the `pytest` unit tests to hit your local Sindri API instance with:
 ```bash
-SINDRI_API_URL=http://localhost/api SINDRI_API_KEY=$(cat ~/forge/API_KEY) pytest
+SINDRI_BASE_URL=http://localhost SINDRI_API_KEY=$(cat ~/forge/API_KEY) pytest
 ```

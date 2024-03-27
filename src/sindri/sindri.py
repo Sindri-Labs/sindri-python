@@ -29,6 +29,7 @@ import platform
 import tarfile
 import time
 from pprint import pformat
+from urllib.parse import urlparse
 
 import requests
 
@@ -43,8 +44,7 @@ class Sindri:
 
         pass
 
-    DEFAULT_SINDRI_API_URL = "https://sindri.app/api/"
-    API_VERSION = "v1"
+    DEFAULT_SINDRI_API_URL = "https://sindri.app/api/v1/"
 
     VERBOSE_LEVELS: list[int] = [0, 1, 2]
 
@@ -78,16 +78,7 @@ class Sindri:
         self.perform_verify: bool = False
 
         # Set API Url
-        self._api_url = kwargs.get("api_url", self.DEFAULT_SINDRI_API_URL)
-        if not isinstance(self._api_url, str):
-            raise Sindri.APIError("Invalid API Url")
-        if self._api_url == "":
-            raise Sindri.APIError("Invalid API Url")
-        if not self._api_url.endswith(self.API_VERSION) or not self._api_url.endswith(
-            f"{self.API_VERSION}/"
-        ):
-            # Append f"{self.API_VERSION}/" to self._api_url
-            self._api_url = os.path.join(self._api_url, f"{self.API_VERSION}/")
+        self._api_url = self._get_api_url_from_init_kwargs(**kwargs)
 
         # Set API Key
         self.set_api_key(api_key)
@@ -98,6 +89,60 @@ class Sindri:
             self._print_sindri_logo()
             print(f"Sindri API Url: {self._api_url}")
             print(f"Sindri API Key: {self.api_key}\n")
+
+    def _get_api_url_from_init_kwargs(self, **kwargs) -> str:
+        """Given the `kwargs` from the `__init__` method, return the api url.
+        This looks for `api_url` and `base_url` in `**kwargs`. `base_url` is processed first,
+        then `api_url` if `base_url` is not present. Finally, if neither are present, this will
+        return the default api url.
+        """
+
+        def is_url(url: str) -> bool:
+            """Validate a provided str is a url."""
+            try:
+                result = urlparse(url)
+                return all([result.scheme, result.netloc])
+            except ValueError:
+                return False
+
+        # Order of precedence for setting self._api_url
+        # 1. `base_url` is in kwargs
+        url = kwargs.get("base_url", None)
+        if url is not None:
+            error_msg: str = "Invalid 'base_url' provided."
+            if not isinstance(url, str):
+                raise Sindri.APIError(error_msg)
+            # Remove trailing slash "/"
+            url = url.rstrip("/")
+            # Validate str is a url
+            if not is_url(url):
+                raise Sindri.APIError(error_msg)
+            # We assume a provided "base_url" has no path on the end
+            path = urlparse(url).path
+            if path != "":
+                raise Sindri.APIError(error_msg)
+            return os.path.join(url, "api", "v1", "")
+
+        # 2. `api_url` is in kwargs
+        url = kwargs.get("api_url", None)
+        if url is not None:
+            print("\nWARNING: 'api_url' is deprecated. Use 'base_url'.\n")
+            error_msg = "Invalid 'api_url' provided."
+            if not isinstance(url, str):
+                raise Sindri.APIError(error_msg)
+            # Remove trailing slash "/"
+            url = url.rstrip("/")
+            # Validate str is a url
+            if not is_url(url):
+                raise Sindri.APIError(error_msg)
+            # We assume a provided "api_url" has "/api" as the path on the end
+            path = urlparse(url).path
+            if path != "/api":
+                raise Sindri.APIError(error_msg)
+            return os.path.join(url, "v1", "")
+
+        # 3. Use default
+        return self.DEFAULT_SINDRI_API_URL
 
     def _get_circuit(self, circuit_id: str, include_verification_key: bool = False) -> dict:
         """Hit the circuit_detail API endpoint and validate the response. Do not print anything.

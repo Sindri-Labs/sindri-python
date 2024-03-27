@@ -1,6 +1,8 @@
 import os
 import time
 
+import pytest
+
 from src.sindri.sindri import Sindri
 
 # Load sample data.
@@ -33,8 +35,8 @@ with open(circom_proof_input_file_path, "r") as f:
 
 # Create an instance of the Sindri SDK
 api_key = os.environ.get("SINDRI_API_KEY", "unset")
-api_url = os.environ.get("SINDRI_API_URL", "https://sindri.app/api")
-sindri = Sindri(api_key, api_url=api_url, verbose_level=2)
+base_url = os.environ.get("SINDRI_BASE_URL", "https://sindri.app")
+sindri = Sindri(api_key, base_url=base_url, verbose_level=2)
 
 
 class TestSindriSdk:
@@ -135,3 +137,107 @@ class TestSindriSdk:
         sindri.get_smart_contract_verifier(circuit_id)
         sindri.get_proof(proof_id, include_smart_contract_calldata=True)
         sindri.delete_circuit(circuit_id)
+
+
+class TestInitSindriSdkWithUrl:
+    def test_api_url(self):
+        """Test valid and invalid api_url."""
+        expected_resulting_api_url = "https://sindri.app/api/v1/"
+
+        # No trailing slash
+        url = "https://sindri.app/api"
+        s = Sindri("a", api_url=url)
+        assert s._api_url == expected_resulting_api_url
+
+        # Trailing slash
+        url = "https://sindri.app/api/"
+        s = Sindri("a", api_url=url)
+        assert s._api_url == expected_resulting_api_url
+
+        # Multiple trailing slashes
+        url = "https://sindri.app/api//"
+        s = Sindri("a", api_url=url)
+        assert s._api_url == expected_resulting_api_url
+
+        # Missing trailing /api path
+        url = "https://sindri.app"
+        with pytest.raises(Sindri.APIError):
+            s = Sindri("a", api_url=url)
+
+        # Invalid trailing /api path
+        url = "https://sindri.app/api/apiiii"
+        with pytest.raises(Sindri.APIError):
+            s = Sindri("a", api_url=url)
+
+    def test_base_url(self):
+        """Test valid and invalid base_url."""
+        expected_resulting_api_url = "https://sindri.app/api/v1/"
+
+        # No trailing slash
+        url = "https://sindri.app"
+        s = Sindri("a", base_url=url)
+        assert s._api_url == expected_resulting_api_url
+
+        # Trailing slash
+        url = "https://sindri.app/"
+        s = Sindri("a", base_url=url)
+        assert s._api_url == expected_resulting_api_url
+
+        # Multiple trailing slashes
+        url = "https://sindri.app//"
+        s = Sindri("a", base_url=url)
+        assert s._api_url == expected_resulting_api_url
+
+        # Includes /api trailing path
+        url = "https://sindri.app/api"
+        with pytest.raises(Sindri.APIError):
+            s = Sindri("a", base_url=url)
+
+        # Invalid any trailing path
+        url = "https://sindri.app/apiiii"
+        with pytest.raises(Sindri.APIError):
+            s = Sindri("a", base_url=url)
+
+    def test_api_url_and_base_url(self):
+        """Test valid and invalid api_url + base_url."""
+
+        # Valid api_url and valid base_url should return base_url
+        expected_resulting_api_url = "https://base-url.sindri.app/api/v1/"
+        api_url = "https://api-url.sindri.app/api"
+        base_url = "https://base-url.sindri.app"
+        s = Sindri("a", api_url=api_url, base_url=base_url)
+        assert s._api_url == expected_resulting_api_url
+
+        # Invalid api_url and valid base_url should return base_url.
+        # api_url is ignored because base_url is prioritized
+        expected_resulting_api_url = "https://base-url.sindri.app/api/v1/"
+        api_url = "https://api-url.sindri.app/apiiiiii"
+        base_url = "https://base-url.sindri.app"
+        s = Sindri("a", api_url=api_url, base_url=base_url)
+        assert s._api_url == expected_resulting_api_url
+
+        # Valid api_url and invalid base_url should raise exception
+        # base_url is prioritized
+        api_url = "https://api-url.sindri.app/apiiiiii"
+        base_url = "https://base-url.sindri.app/aaaaaaaa"
+        with pytest.raises(Sindri.APIError):
+            s = Sindri("a", api_url=api_url, base_url=base_url)
+
+        # Invalid api_url and invalid base_url should raise exception
+        api_url = "https://api-url.sindri.app/apiiiiii"
+        base_url = "https://base-url.sindri.app/aaaaaaaa"
+        with pytest.raises(Sindri.APIError):
+            s = Sindri("a", api_url=api_url, base_url=base_url)
+
+    def test_default_url(self):
+        """Test default url is used when api_url and base_url are not specified."""
+        s = Sindri("a")
+        assert s.DEFAULT_SINDRI_API_URL == s._api_url
+
+    def test_not_a_url(self):
+        """Test api_url base_url are not urls."""
+        with pytest.raises(Sindri.APIError):
+            _ = Sindri("a", api_url="not_a_url")
+
+        with pytest.raises(Sindri.APIError):
+            _ = Sindri("a", base_url="not_a_url")
