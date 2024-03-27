@@ -6,6 +6,8 @@ exclude =
     .pytest_cache/*
     __pycache__/*
     .vscode
+    venv
+    env
 
 ignore =
     # Ignore flake8 errors that conflict with Black

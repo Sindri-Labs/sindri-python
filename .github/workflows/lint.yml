@@ -1,0 +1,52 @@
+name: Lint Codebase
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    # Do not run on draft pull requests
+    types:
+    - opened
+    - reopened
+    - synchronize
+    - ready_for_review
+
+jobs:
+  run-lint:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' || !github.event.pull_request.draft }}  # Do not run on draft pull requests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10.6
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.10.6
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - name: Install Dependencies
+        run: poetry install
+
+      - name: Check formatting with black
+        if: success() || failure()
+        run: |
+          poetry run black --check .
+
+      - name: Check import order with isort
+        if: success() || failure()
+        run: |
+          poetry run isort --check-only .
+
+      - name: Lint with flake8
+        if: success() || failure()
+        run: |
+          poetry run flake8 .
+
+      - name: Verify typing annotations
+        if: success() || failure()
+        run: |
+          poetry run mypy .
