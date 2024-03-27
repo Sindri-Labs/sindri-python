@@ -21,6 +21,7 @@ with open(proof_input_file_path, "r") as f:
     proof_id: str = sindri.prove_circuit(circuit_id, f.read())
 ```
 """
+
 import io
 import json
 import os
