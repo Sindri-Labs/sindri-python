@@ -31,7 +31,7 @@ import time
 from pprint import pformat
 from urllib.parse import urlparse
 
-import requests
+import requests  # type: ignore
 
 __version__ = "v0.0.0"
 
