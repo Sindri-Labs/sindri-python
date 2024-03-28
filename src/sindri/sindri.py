@@ -78,7 +78,7 @@ class Sindri:
         self.max_polling_iterations: int = 172800  # 2 days with polling interval 1 second
         self.perform_verify: bool = False
 
-        self._api_url = self._get_api_url_from_init_kwargs(**kwargs)
+        self._api_url = self._get_api_url(**kwargs)
         self.set_api_key(api_key)
 
         # With initial setup complete, set desired verbose level.
@@ -88,10 +88,12 @@ class Sindri:
             print(f"Sindri API Url: {self._api_url}")
             print(f"Sindri API Key: {self.api_key}\n")
 
-    def _get_api_url_from_init_kwargs(self, **kwargs) -> str:
-        """Receive `kwargs` from `Sindri.__init__()` and return the API URL.
-        This examines `**kwargs` for `base_url` and `api_url`, in that order.
-        If neither are present, return the default API URL.
+    def _get_api_url(self, **kwargs) -> str:
+        """Examine `**kwargs` for `base_url` and `api_url`, in that order.
+        If `base_url` is found and valid, return that. If not valid, raise an error.
+        If `base_url` is not found then check for `api_url`.
+        If `api_url` is found and valid, return that. If not valid, raise an error.
+        If neither keyword is found in `**kwargs`, return the default API URL.
         """
 
         def is_url(url: str) -> bool:
