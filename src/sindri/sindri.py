@@ -31,7 +31,6 @@ import tarfile
 import time
 from pprint import pformat
 from urllib.parse import urlparse
-from uuid import UUID
 
 import requests  # type: ignore
 
@@ -786,14 +785,6 @@ class Sindri:
             raise Sindri.APIError("Invalid API Key")
         if api_key == "":
             raise Sindri.APIError("Invalid API Key")
-        try:
-            # Ensure `apikey` is a uuid4.
-            # We type `apikey` as `str` above; if the caller provides a non-uuid4
-            # string, we catch that mistake here.
-            _ = UUID(api_key, version=4)
-        except ValueError:
-            raise Sindri.APIError("Invalid API Key")
-
         self.api_key = api_key
         self._set_json_request_headers()
         if self.verbose_level > 0:
