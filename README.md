@@ -12,6 +12,7 @@ Contains SDK code for Sindri APIs. Please see [sindri.app](https://sindri.app) f
 
 ## Documentation and Usage
 Documentation for this repo is automatically generated from the Python docstrings using [lazydocs](https://pypi.org/project/lazydocs/) and published to [sindri.app/docs/reference/sdk/](https://sindri.app/docs/reference/sdk/python) along with the rest of the documentation for Sindri.
+Docstrings for functions and methods follow the [google standard](https://google.github.io/styleguide/pyguide.html#383-functions-and-methods) for formatting.
 
 ## License
 [![](https://img.shields.io/github/license/sindri-labs/sindri-python?style=for-the-badge)](https://img.shields.io/github/license/sindri-labs/sindri-python?style=for-the-badge)
