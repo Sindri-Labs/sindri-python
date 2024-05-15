@@ -4,7 +4,7 @@ These tests assume the Sindri API is functioning normally and you have a valid `
 
 # Setup
 1. In the parent directory of this repo, clone the [sindri-resources](https://github.com/Sindri-Labs/sindri-resources) repo: `git clone https://github.com/Sindri-Labs/sindri-resources.git`
-1. Obtain a valid Sindri API Key. See [sindri.app/docs](sindri.app/docs) for more information about creating a Sindri account.
+1. Obtain a valid Sindri API Key. See [sindri.app/docs](https://sindri.app/docs/introduction) for more information about creating a Sindri account.
 1. Configure your python environment (see below)
 1. Configure your environment variables (see below)
 
