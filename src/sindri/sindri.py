@@ -33,6 +33,7 @@ from pprint import pformat
 from urllib.parse import urlparse
 
 import requests  # type: ignore
+from requests.adapters import HTTPAdapter, Retry
 
 __version__ = "v0.0.0"
 
@@ -234,15 +235,28 @@ class Sindri:
 
         # Construct the full path to the API endpoint.
         full_path = os.path.join(self._api_url, path)
+
+        # Create a custom request session that will make all HTTP requests from the same session
+        # retry for a total of 5 times, sleeping between retries with an increasing backoff of
+        # 0s, 2s, 4s, 8s, 16s (the first retry is done immediately). It will retry on basic
+        # connectivity issues (including DNS lookup failures), and HTTP status codes of 502, 503
+        # and 504.
+        session = requests.Session()
+        max_retries = Retry(total=5, backoff_factor=1, status_forcelist=[502, 503, 504])
+        adapter = HTTPAdapter(max_retries=max_retries)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+
+        # Hit the API
         try:
             if method == "POST":
-                response = requests.post(
+                response = session.post(
                     full_path, headers=self.headers_json, data=data, files=files
                 )
             elif method == "GET":
-                response = requests.get(full_path, headers=self.headers_json, params=data)
+                response = session.get(full_path, headers=self.headers_json, params=data)
             elif method == "DELETE":
-                response = requests.delete(full_path, headers=self.headers_json, data=data)
+                response = session.delete(full_path, headers=self.headers_json, data=data)
             else:
                 raise Sindri.APIError("Invalid request method")
         except requests.exceptions.ConnectionError:
