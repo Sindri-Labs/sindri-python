@@ -696,9 +696,9 @@ class Sindri:
         self,
         circuit_id: str,
         proof_input: str,
-        prover_implementation: str | None = None,
         perform_verify: bool = False,
         wait: bool = True,
+        **kwargs,
     ) -> str:
         """Prove a circuit with specified inputs. For information, refer to the
         [API docs](https://sindri.app/docs/reference/api/proof-create/).
@@ -707,9 +707,6 @@ class Sindri:
         - `circuit_id`: The circuit identifier of the circuit.
         - `proof_input`: A string representing proof input which may be formatted as JSON for any
         framework. Noir circuits optionally accept TOML formatted proof input.
-        - `prover_implementation`: For Sindri internal usage. The default value, `None`, chooses
-        the best supported prover implementation based on a variety of factors including the
-        available hardware, proving scheme, circuit size, and framework.
         - `perform_verify`: A boolean indicating whether to perform an internal verification check
         during the proof creation.
         - `wait`:
@@ -729,6 +726,9 @@ class Sindri:
         """
         # Return values
         proof_id = ""
+
+        # Grab prover_implementation from **kwargs
+        prover_implementation = kwargs.get("prover_implementation", None)
 
         # 1. Submit a proof, obtain a proof_id.
         if self.verbose_level > 0:
