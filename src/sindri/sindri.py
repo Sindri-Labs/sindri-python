@@ -618,8 +618,8 @@ class Sindri:
         proof_id: str,
         include_proof: bool = True,
         include_public: bool = True,
-        include_smart_contract_calldata: bool = False,
-        include_verification_key: bool = False,
+        include_smart_contract_calldata: bool = True,
+        include_verification_key: bool = True,
     ) -> dict:
         """Get info for an existing proof. For information, refer to the
         [API docs](https://sindri.app/docs/reference/api/proof-detail/).
