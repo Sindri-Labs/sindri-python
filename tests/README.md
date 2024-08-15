@@ -52,3 +52,6 @@ If you are running the Sindri api locally at `~/myproject` with `~/myproject/API
 ```bash
 SINDRI_BASE_URL=http://localhost SINDRI_API_KEY=$(cat ~/myproject/API_KEY) pytest
 ```
+
+#### Show standard output during pytest
+Add the `-s` flag to `pytest` to print standard output to the terminal for successful tests.
