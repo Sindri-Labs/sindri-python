@@ -236,24 +236,24 @@ class Sindri:
     def _get_verbose_1_circuit_detail(self, circuit_detail: dict) -> dict:
         """Return a slim circuit detail object for printing."""
         return {
+            "status": circuit_detail.get("status", None),
+            "project_name": circuit_detail.get("project_name", None),
             "circuit_id": circuit_detail.get("circuit_id", None),
-            "circuit_name": circuit_detail.get("circuit_name", None),
+            "tags": circuit_detail.get("tags", None),
             "circuit_type": circuit_detail.get("circuit_type", None),
             "compute_time": circuit_detail.get("compute_time", None),
-            "date_created": circuit_detail.get("date_created", None),
-            "status": circuit_detail.get("status", None),
         }
 
     def _get_verbose_1_proof_detail(self, proof_detail: dict) -> dict:
         """Return a slim proof detail object for printing."""
         return {
+            "status": proof_detail.get("status", None),
+            "proof_id": proof_detail.get("proof_id", None),
+            "project_name": proof_detail.get("project_name", None),
             "circuit_id": proof_detail.get("circuit_id", None),
-            "circuit_name": proof_detail.get("circuit_name", None),
+            "tags": proof_detail.get("tags", None),
             "circuit_type": proof_detail.get("circuit_type", None),
             "compute_time": proof_detail.get("compute_time", None),
-            "date_created": proof_detail.get("date_created", None),
-            "proof_id": proof_detail.get("proof_id", None),
-            "status": proof_detail.get("status", None),
         }
 
     def _hit_api(self, method: str, path: str, data=None, files=None) -> tuple[int, dict | list]:
@@ -332,19 +332,11 @@ class Sindri:
         # https://ascii-generator.site/ 32 columns
         print(
             f"""Sindri API Python SDK - {self.version}
-     .+******************+.
-     =********************=
- .:.  -==================-
-=****
-=****-
- .::-*+==================-
-     =********************=
-     .+******************+.
-                           =**+:
-                          :*****
-    .:::::::::::::::::::::++==-
-  .***********************+
-  .***********************-"""
+      -++++++-
+    -+.
+      +******=
+             .*-
+     -*******="""
         )
 
     def _set_json_request_headers(self) -> None:
@@ -828,9 +820,7 @@ class Sindri:
             )
             proof_status = proof.get("status", "")
             if proof_status == "Failed":
-                raise Sindri.APIError(
-                    f"Prove circuit failed." f" error={proof.get('error', '')}"
-                )
+                raise Sindri.APIError(f"Prove circuit failed." f" error={proof.get('error', '')}")
 
         if self.verbose_level > 0:
             proof_detail = proof.copy()
