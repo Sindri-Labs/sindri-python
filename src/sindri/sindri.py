@@ -350,7 +350,11 @@ class Sindri:
         }
 
     def create_circuit(
-        self, circuit_upload_path: str, tags: list[str] | None = None, wait: bool = True
+        self,
+        circuit_upload_path: str,
+        tags: list[str] | None = None,
+        wait: bool = True,
+        meta: dict | None = None,
     ) -> str:
         """Create a circuit. For information, refer to the
         [API docs](https://sindri.app/docs/reference/api/circuit-create/).
@@ -359,6 +363,9 @@ class Sindri:
         - `circuit_upload_path`: The path to either
             - A directory containing your circuit files
             - A compressed file (`.tar.gz` or `.zip`) of your circuit directory
+        - `meta`: An arbitrary mapping of metadata keys to string values.
+        This can be used to track additional information about the circuit such as an ID
+        from an external system.
         - `tags`: A list of tags to assign the circuit. Defaults to `["latest"]` if not
         sepecified.
         - `wait`:
@@ -401,11 +408,16 @@ class Sindri:
                 tar.add(circuit_upload_path, arcname=file_name)
             files = {"files": fh.getvalue()}  # type: ignore
 
+        data = {
+            "tags": tags,
+        }
+        if meta is not None:
+            data["meta"] = json.dumps(meta)  # type: ignore
         # Hit circuit/create API endpoint
         response_status_code, response_json = self._hit_api(
             "POST",
             "circuit/create",
-            data={"tags": tags},
+            data=data,
             files=files,
         )
         if response_status_code != 201:
@@ -740,6 +752,7 @@ class Sindri:
         proof_input: str,
         perform_verify: bool = False,
         wait: bool = True,
+        meta: dict | None = None,
         **kwargs,
     ) -> str:
         """Prove a circuit with specified inputs. For information, refer to the
@@ -747,6 +760,8 @@ class Sindri:
 
         Args:
         - `circuit_id`: The circuit identifier of the circuit.
+        - `meta`: An arbitrary mapping of metadata keys to string values. This can be used to
+        track additional information about the proof such as an ID from an external system.
         - `proof_input`: A string representing proof input which may be formatted as JSON for any
         framework. Noir circuits optionally accept TOML formatted proof input.
         - `perform_verify`: A boolean indicating whether to perform an internal verification check
@@ -775,15 +790,18 @@ class Sindri:
         # 1. Submit a proof, obtain a proof_id.
         if self.verbose_level > 0:
             print("Prove circuit")
+
+        data = {
+            "proof_input": proof_input,
+            "perform_verify": perform_verify,
+            "prover_implementation": prover_implementation,
+        }
+        if meta is not None:
+            data["meta"] = json.dumps(meta)
+
         # Hit the circuit/<circuit_id>/prove endpoint
         response_status_code, response_json = self._hit_api(
-            "POST",
-            f"circuit/{circuit_id}/prove",
-            data={
-                "proof_input": proof_input,
-                "perform_verify": perform_verify,
-                "prover_implementation": prover_implementation,
-            },
+            "POST", f"circuit/{circuit_id}/prove", data=data
         )
         if response_status_code != 201:
             raise Sindri.APIError(
