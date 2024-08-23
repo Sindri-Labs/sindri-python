@@ -73,7 +73,9 @@ class TestSindriSdk:
         1. Test delete proof
         1. Test delete circuit
         """
-        circuit_id = sindri.create_circuit(noir_circuit_dir, tags=["latest", "pytest"], meta={"py-sdk": "pytest"})
+        circuit_id = sindri.create_circuit(
+            noir_circuit_dir, tags=["latest", "pytest"], meta={"py-sdk": "pytest"}
+        )
         proof_id = sindri.prove_circuit(circuit_id, noir_proof_input, meta={"py-sdk": "pytest"})
         sindri.get_all_circuit_proofs(circuit_id)
         sindri.get_circuit(circuit_id)

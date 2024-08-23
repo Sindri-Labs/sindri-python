@@ -408,9 +408,11 @@ class Sindri:
                 tar.add(circuit_upload_path, arcname=file_name)
             files = {"files": fh.getvalue()}  # type: ignore
 
-        data = {"tags": tags}
+        data = {
+            "tags": tags,
+        }
         if meta is not None:
-            data["meta"] = json.dumps(meta)
+            data["meta"] = json.dumps(meta)  # type: ignore
         # Hit circuit/create API endpoint
         response_status_code, response_json = self._hit_api(
             "POST",
