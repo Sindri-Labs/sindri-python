@@ -408,14 +408,14 @@ class Sindri:
                 tar.add(circuit_upload_path, arcname=file_name)
             files = {"files": fh.getvalue()}  # type: ignore
 
+        data = {"tags": tags}
+        if meta is not None:
+            data["meta"] = json.dumps(meta)
         # Hit circuit/create API endpoint
         response_status_code, response_json = self._hit_api(
             "POST",
             "circuit/create",
-            data={
-                "tags": tags,
-                "meta": json.dumps(meta),
-            },
+            data=data,
             files=files,
         )
         if response_status_code != 201:
@@ -788,16 +788,18 @@ class Sindri:
         # 1. Submit a proof, obtain a proof_id.
         if self.verbose_level > 0:
             print("Prove circuit")
+
+        data = {
+            "proof_input": proof_input,
+            "perform_verify": perform_verify,
+            "prover_implementation": prover_implementation,
+        }
+        if meta is not None:
+            data["meta"] = json.dumps(meta)
+
         # Hit the circuit/<circuit_id>/prove endpoint
         response_status_code, response_json = self._hit_api(
-            "POST",
-            f"circuit/{circuit_id}/prove",
-            data={
-                "proof_input": proof_input,
-                "perform_verify": perform_verify,
-                "prover_implementation": prover_implementation,
-                "meta": json.dumps(meta),
-            },
+            "POST", f"circuit/{circuit_id}/prove", data=data
         )
         if response_status_code != 201:
             raise Sindri.APIError(
