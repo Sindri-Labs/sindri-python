@@ -6,6 +6,9 @@
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sindri-labs/sindri-python/build-publish-pypi.yml?style=for-the-badge)
 
+## Requirements
+- Python `>=3.8`
+
 ## Description
 The Sindri Python SDK.
 Contains SDK code for Sindri APIs. Please see [sindri.app](https://sindri.app) for more details.
