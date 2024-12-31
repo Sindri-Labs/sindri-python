@@ -11,7 +11,7 @@ The Sindri Python SDK.
 Contains SDK code for Sindri APIs. Please see [sindri.app](https://sindri.app) for more details.
 
 ## Requirements
-This is compatible with Python `>=3.8`.
+This SDK is compatible with Python `>=3.8`.
 However, Sindri does not officially support usage with Python versions that have passed their [End of Life](https://devguide.python.org/versions/) support.
 
 ## Installation
