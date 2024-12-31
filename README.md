@@ -6,12 +6,17 @@
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/sindri-labs/sindri-python/build-publish-pypi.yml?style=for-the-badge)
 
-## Requirements
-- Python `>=3.8`
-
 ## Description
 The Sindri Python SDK.
 Contains SDK code for Sindri APIs. Please see [sindri.app](https://sindri.app) for more details.
+
+## Requirements
+This is compatible with Python `>=3.8`.
+However, Sindri does not officially support usage with Python versions that have passed their [End of Life](https://devguide.python.org/versions/) support.
+
+## Installation
+You can install `sindri` from [PyPI](https://pypi.org/project/sindri/).
+For example: `pip install sindri`
 
 ## Documentation and Usage
 Documentation for this repo is automatically generated from the Python docstrings using [lazydocs](https://pypi.org/project/lazydocs/) and published to [sindri.app/docs/reference/sdk/](https://sindri.app/docs/reference/sdk/python) along with the rest of the documentation for Sindri.
