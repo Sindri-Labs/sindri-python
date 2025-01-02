@@ -30,6 +30,7 @@ import platform
 import tarfile
 import time
 from pprint import pformat
+from typing import List, Tuple, Union
 from urllib.parse import urlparse
 
 import requests  # type: ignore
@@ -48,7 +49,7 @@ class Sindri:
 
     DEFAULT_SINDRI_API_URL = "https://sindri.app/api/v1/"
 
-    VERBOSE_LEVELS: list[int] = [0, 1, 2]
+    VERBOSE_LEVELS = [0, 1, 2]
 
     def __init__(self, api_key: str, verbose_level: int = 0, **kwargs):
         """Initialize an instance of the Sindri SDK.
@@ -256,7 +257,9 @@ class Sindri:
             "compute_time": proof_detail.get("compute_time", None),
         }
 
-    def _hit_api(self, method: str, path: str, data=None, files=None) -> tuple[int, dict | list]:
+    def _hit_api(
+        self, method: str, path: str, data=None, files=None
+    ) -> Tuple[int, Union[dict, list]]:
         """
         Hit the Sindri API.
 
@@ -352,9 +355,9 @@ class Sindri:
     def create_circuit(
         self,
         circuit_upload_path: str,
-        tags: list[str] | None = None,
+        tags: Union[List[str], None] = None,
         wait: bool = True,
-        meta: dict | None = None,
+        meta: Union[dict, None] = None,
     ) -> str:
         """Create a circuit. For information, refer to the
         [API docs](https://sindri.app/docs/reference/api/circuit-create/).
@@ -510,7 +513,7 @@ class Sindri:
                 f" status={response_status_code} response={response_json}"
             )
 
-    def get_all_circuit_proofs(self, circuit_id: str) -> list[dict]:
+    def get_all_circuit_proofs(self, circuit_id: str) -> List[dict]:
         """Return a list of proof infos for the provided circuit_id. For information, refer to the
         [API docs](https://sindri.app/docs/reference/api/circuit-proofs/).
 
@@ -550,7 +553,7 @@ class Sindri:
 
         return response_json
 
-    def get_all_circuits(self) -> list[dict]:
+    def get_all_circuits(self) -> List[dict]:
         """Return a list of all circuit infos. For information, refer to the
         [API docs](https://sindri.app/docs/reference/api/circuit-list/).
 
@@ -752,7 +755,7 @@ class Sindri:
         proof_input: str,
         perform_verify: bool = False,
         wait: bool = True,
-        meta: dict | None = None,
+        meta: Union[dict, None] = None,
         **kwargs,
     ) -> str:
         """Prove a circuit with specified inputs. For information, refer to the

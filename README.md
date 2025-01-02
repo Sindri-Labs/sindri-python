@@ -10,6 +10,14 @@
 The Sindri Python SDK.
 Contains SDK code for Sindri APIs. Please see [sindri.app](https://sindri.app) for more details.
 
+## Requirements
+This SDK is compatible with Python `>=3.8`.
+However, Sindri does not officially support usage with Python versions that have passed their [End of Life](https://devguide.python.org/versions/) support.
+
+## Installation
+You can install `sindri` from [PyPI](https://pypi.org/project/sindri/).
+For example: `pip install sindri`
+
 ## Documentation and Usage
 Documentation for this repo is automatically generated from the Python docstrings using [lazydocs](https://pypi.org/project/lazydocs/) and published to [sindri.app/docs/reference/sdk/](https://sindri.app/docs/reference/sdk/python) along with the rest of the documentation for Sindri.
 Docstrings for functions and methods follow the [google standard](https://google.github.io/styleguide/pyguide.html#383-functions-and-methods) for formatting.
