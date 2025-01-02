@@ -161,10 +161,12 @@ class Sindri:
             raise Sindri.APIError("Received unexpected type for circuit detail response.")
         return response_json
 
-    def _get_circuit_status(
-        self,
-        circuit_id: str,
-    ) -> str:
+    def _get_circuit_status(self, circuit_id: str) -> str:
+        """Hit the circuit_status API endpoint and validate the response. Do not print anything.
+        This may raise `Sindri.APIError` if the response is invalid."""
+        return self._get_circuit_finished_status(circuit_id)[1]
+
+    def _get_circuit_finished_status(self, circuit_id: str) -> Tuple[bool, str]:
         """Hit the circuit_status API endpoint and validate the response. Do not print anything.
         This may raise `Sindri.APIError` if the response is invalid."""
         response_status_code, response_json = self._hit_api(
@@ -178,10 +180,11 @@ class Sindri:
             )
         if not isinstance(response_json, dict):
             raise Sindri.APIError("Received unexpected type for circuit status response.")
+        finished_processing = response_json.get("finished_processing", False)
         status = response_json.get("status", "")
         if status == "":
             raise Sindri.APIError("Received unexpected type for circuit status response.")
-        return status
+        return finished_processing, status
 
     def _get_proof(
         self,
@@ -212,10 +215,12 @@ class Sindri:
             raise Sindri.APIError("Received unexpected type for proof detail response.")
         return response_json
 
-    def _get_proof_status(
-        self,
-        proof_id: str,
-    ) -> str:
+    def _get_proof_status(self, proof_id: str) -> str:
+        """Hit the proof_status API endpoint and validate the response. Do not print anything.
+        This may raise `Sindri.APIError` if the response is invalid."""
+        return self._get_proof_finished_status(proof_id)[1]
+
+    def _get_proof_finished_status(self, proof_id: str) -> Tuple[bool, str]:
         """Hit the proof_status API endpoint and validate the response. Do not print anything.
         This may raise `Sindri.APIError` if the response is invalid."""
         response_status_code, response_json = self._hit_api(
@@ -229,10 +234,11 @@ class Sindri:
             )
         if not isinstance(response_json, dict):
             raise Sindri.APIError("Received unexpected type for proof status response.")
+        finished_processing = response_json.get("finished_processing", False)
         status = response_json.get("status", "")
         if status == "":
             raise Sindri.APIError("Received unexpected type for proof status response.")
-        return status
+        return finished_processing, status
 
     def _get_verbose_1_circuit_detail(self, circuit_detail: dict) -> dict:
         """Return a slim circuit detail object for printing."""
@@ -437,12 +443,12 @@ class Sindri:
             print(f"    circuit_id:   {circuit_id}")
 
         if wait:
-            # 2. Poll circuit detail until it has a status of Ready/Failed
+            # 2. Poll circuit detail until it is finished processing
             if self.verbose_level > 0:
-                print("Circuit: Poll until Ready/Failed")
+                print("Circuit: Poll until Finished")
             for _ in range(self.max_polling_iterations):
-                circuit_status = self._get_circuit_status(circuit_id)
-                if circuit_status in ["Ready", "Failed"]:
+                finished_processing, _ = self._get_circuit_finished_status(circuit_id)
+                if finished_processing:
                     break
                 time.sleep(self.polling_interval_sec)
             else:
@@ -820,12 +826,12 @@ class Sindri:
             print(f"    proof_id:     {proof_id}")
 
         if wait:
-            # 2. Poll proof detail until it has a status of Ready/Failed
+            # 2. Poll proof detail until it is finished processing
             if self.verbose_level > 0:
-                print("Proof: Poll until Ready/Failed")
+                print("Proof: Poll until Finished")
             for _ in range(self.max_polling_iterations):
-                proof_status = self._get_proof_status(proof_id)
-                if proof_status in ["Ready", "Failed"]:
+                finished_processing, _ = self._get_proof_finished_status(proof_id)
+                if finished_processing:
                     break
                 time.sleep(self.polling_interval_sec)
             else:
