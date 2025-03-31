@@ -406,10 +406,11 @@ class Sindri:
             # Create a tar archive and upload via byte stream
             circuit_upload_path = os.path.abspath(circuit_upload_path)
             file_name = f"{pathlib.Path(circuit_upload_path).stem}.tar.gz"
-            fh = io.BytesIO()
-            with tarfile.open(fileobj=fh, mode="w:gz") as tar:
-                tar.add(circuit_upload_path, arcname=file_name)
-            files = {"files": fh.getvalue()}  # type: ignore
+            with open(file_name, "wb") as fh:
+                with tarfile.open(fileobj=fh, mode="w:gz") as tar:
+                    tar.add(circuit_upload_path, arcname=file_name)
+            fh = open(file_name, "rb")
+            files = {"files": fh}
 
         data = {
             "tags": tags,
